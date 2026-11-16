@@ -81,6 +81,28 @@ input.text:focus,textarea.text:focus{border-color:var(--marigold);outline:none}
 .ds-tools{margin:10px 16px 0;border-radius:12px;border:1px solid var(--line)}
 .ds-vp{flex:1;min-height:0;position:relative;overflow:hidden;margin:10px 16px 16px;background:#d5d9d2;border-radius:8px}
 .ds-vp canvas{position:absolute;left:0;top:0;transform-origin:0 0;touch-action:none;cursor:crosshair;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+.vis-hidden{position:fixed;left:-9999px;width:1px;height:1px;opacity:0}
+.t-timer{position:fixed;left:16px;bottom:16px;z-index:65;display:flex;align-items:center;gap:8px;background:var(--board-2);border:2px solid var(--marigold);color:var(--chalk);border-radius:999px;padding:6px 8px 6px 18px;font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.t-timer button{background:var(--board);color:var(--chalk);border:0;border-radius:50%;width:36px;height:36px;font-size:1rem}
+.t-timer.low{border-color:#fb923c}.t-timer.done{background:#b91c1c;border-color:#fecaca;animation:pulse 1s infinite}
+#timer-pill{position:absolute;top:10px;right:12px;z-index:6;pointer-events:none;background:rgba(20,35,31,.9);color:#fff;font-weight:700;font-size:1.5rem;padding:6px 18px;border-radius:999px;font-variant-numeric:tabular-nums}
+#timer-pill.low{background:#c2410c}#timer-pill.paused{background:#475569}#timer-pill.done{background:#dc2626;animation:pulse 1s infinite}
+.gp{position:fixed;top:64px;right:16px;z-index:60;width:300px;background:var(--board-2);border:2px solid var(--board-3);border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.gp h3{margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
+.gp label{display:block;color:var(--chalk-dim);font-size:.85rem;margin:10px 0 4px}
+.gp input[type=range]{width:100%;accent-color:var(--marigold)}
+.gp .seg{display:flex;gap:6px}.gp .seg button,.gp .sw{border:2px solid var(--board-3);background:var(--board);color:var(--chalk);border-radius:10px;padding:6px 10px;font-weight:600}
+.gp .seg button[aria-pressed=true]{background:var(--marigold);color:var(--marigold-ink);border-color:var(--marigold)}
+.gp .sws{display:flex;gap:8px}.gp .sw{width:32px;height:32px;padding:0;border-radius:50%}.gp .sw[aria-pressed=true]{outline:3px solid var(--chalk)}
+.tool.math{background:#fff4d6;border-color:#f2b134}
+.mt{position:fixed;left:0;right:0;bottom:0;z-index:80;background:#fff;color:var(--ink);border-top:3px solid var(--ink);box-shadow:0 -8px 28px rgba(0,0,0,.28);padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+.mt-head{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.mt-tabs{display:flex;gap:6px}
+.mt-hint{color:#5b665f;font-size:.85rem}
+.mt-items{display:flex;gap:12px;align-items:flex-end;min-height:128px;overflow-x:auto;padding-bottom:4px}
+.mt-item{flex:none;background:#f3f4ef;border:2px solid var(--line);border-radius:12px;padding:8px;touch-action:none;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-user-select:none;user-select:none}
+.mt-item span{font-size:.8rem;font-weight:600}
+.mt-ghost{position:fixed;z-index:90;pointer-events:none;transform:translate(-50%,-50%);opacity:.85;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
 .tile.max{position:fixed;inset:0;z-index:50;border-radius:0;border:0;background:var(--board)}
 .tile.max .tile-head{padding:12px 16px;font-size:1.15rem}
 .tile.max .tile-body{flex:1;min-height:0;margin:0 16px 16px;position:relative;overflow:hidden;background:#d5d9d2}
@@ -127,6 +149,11 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
 .status.bad .dot{background:var(--danger)}
 #stage{flex:1;min-height:0;position:relative;overflow:hidden;background:#d5d9d2}
 #sc{position:absolute;left:0;top:0;transform-origin:0 0;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.18);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:crosshair}
+.msg .open{margin-top:12px}
+.ref-list{display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow:auto}
+.ref-row{display:flex;align-items:center;gap:12px}
+.ref-row img{width:72px;height:54px;object-fit:cover;border-radius:6px;background:#fff}
+.ref-row span{flex:1;color:var(--chalk-dim)}
 #msgs{position:fixed;inset:0;z-index:60;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
 .msg{pointer-events:auto;background:var(--chalk);color:var(--ink);border-radius:18px;padding:22px 56px 22px 24px;width:min(560px,100%);position:relative;box-shadow:0 18px 50px rgba(0,0,0,.45);font-size:1.25rem;border:3px solid var(--marigold)}
 .msg small{display:block;color:#5b665f;font-size:.8rem;margin-bottom:4px}
@@ -167,6 +194,10 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
     <div class="chip hidden" id="room-chip"><small>Room</small><span id="room-code"></span></div>
     <button class="btn ghost hidden" id="btn-qr">Show QR code</button>
     <button class="btn hidden" id="btn-random">🎲 Random screen</button>
+    <button class="btn ghost hidden" id="btn-tab">🖼️ Send image as tab</button>
+    <input type="file" id="tab-file" accept="image/*" class="hidden">
+    <button class="btn ghost hidden" id="btn-timer">⏱ Timer</button>
+    <button class="btn ghost hidden" id="btn-grid">▦ Grid</button>
     <button class="btn ghost hidden" id="btn-draw">✏️ Draw &amp; send</button>
     <button class="btn ghost hidden" id="btn-bg">Set background</button>
     <button class="btn ghost hidden" id="btn-bg-off">Remove background</button>
@@ -192,9 +223,10 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
 <div id="student" class="hidden">
   <div class="toolbar">
     <div id="tb" class="tb-inner"></div>
+    <button class="tool sm hidden" id="btn-refs">📎 Images</button>
     <div class="status" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
   </div>
-  <div id="stage"><canvas id="sc"></canvas></div>
+  <div id="stage"><canvas id="sc"></canvas><div id="timer-pill" class="hidden"></div></div>
   <div id="msgs"></div>
 </div>
 <div id="join" class="hidden">
@@ -207,6 +239,8 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
   </div>
 </div>
 <div id="removed" class="hidden"><div><h2>You've been removed from the room</h2><p>Ask your teacher to let you back in, then scan the QR code again.</p></div></div>
+<div id="t-timer" class="t-timer hidden"><span id="t-timer-text"></span><button id="t-timer-pause" aria-label="Pause or resume timer">⏸</button><button id="t-timer-stop" aria-label="Stop timer">✕</button></div>
+<input type="file" id="photo-in" accept="image/*" class="vis-hidden" aria-hidden="true" tabindex="-1">
 <div id="toast" class="hidden"></div>
 
 <script>
@@ -258,6 +292,8 @@ function drawItem(ctx, it){
   } else if(it.kind==='circle'){
     ctx.beginPath(); ctx.ellipse((it.x1+it.x2)/2,(it.y1+it.y2)/2,Math.abs(it.x2-it.x1)/2,Math.abs(it.y2-it.y1)/2,0,0,Math.PI*2);
     it.fill ? ctx.fill() : ctx.stroke();
+  } else if(it.kind==='math'){
+    drawMath(ctx,it);
   } else if(it.kind==='text'){
     const fs=it.size; ctx.font='600 '+fs+'px Arial, Helvetica, sans-serif'; ctx.textBaseline='top';
     String(it.text||'').slice(0,500).split('\n').forEach((ln,i)=>ctx.fillText(ln,it.x1,it.y1+i*fs*1.25));
@@ -276,10 +312,175 @@ function drawPenTail(ctx, it, from){
   ctx.stroke(); ctx.restore();
 }
 
+/* ---------- maths manipulatives ---------- */
+const NUMICON_COL=[null,'#e9742b','#f3c623','#7cc243','#e0457b','#4aa3df','#8e5bb5','#b4b7c2','#e9553f','#2f9e8f','#7a4f2b'];
+const TOKEN_COL={1:['#e5484d','#fff'],10:['#f2994a','#2b1700'],100:['#f2c94c','#2b2200'],1000:['#6fcf97','#07301a'],10000:['#2d9cdb','#fff'],100000:['#9b51e0','#fff'],1000000:['#4f4f4f','#fff']};
+function mathDims(it){
+  switch(it.type){
+    case 'numicon': return { w:(it.val===1?1:2)*60, h:Math.ceil(it.val/2)*60 };
+    case 'token': return { w:110, h:110 };
+    case 'ones': return { w:40, h:40 };
+    case 'tens': return { w:40, h:400 };
+    case 'hundreds': return { w:400, h:400 };
+    case 'protractor': return { w:700, h:400 };
+  }
+  return { w:100, h:100 };
+}
+function drawCells(ctx,x0,y0,nx,ny,u,fill){
+  ctx.fillStyle=fill; ctx.fillRect(x0,y0,nx*u,ny*u);
+  ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=2;
+  for(let i=0;i<=nx;i++){ ctx.beginPath(); ctx.moveTo(x0+i*u,y0); ctx.lineTo(x0+i*u,y0+ny*u); ctx.stroke(); }
+  for(let j=0;j<=ny;j++){ ctx.beginPath(); ctx.moveTo(x0,y0+j*u); ctx.lineTo(x0+nx*u,y0+j*u); ctx.stroke(); }
+  ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=4; ctx.strokeRect(x0,y0,nx*u,ny*u);
+}
+function drawProtractor(ctx){
+  const Ro=350, py=150, PI=Math.PI;
+  ctx.beginPath(); ctx.moveTo(-Ro,py+50); ctx.lineTo(-Ro,py); ctx.arc(0,py,Ro,PI,2*PI); ctx.lineTo(Ro,py+50); ctx.closePath();
+  ctx.fillStyle='rgba(120,190,255,0.30)'; ctx.fill();
+  ctx.strokeStyle='rgba(20,70,140,0.9)'; ctx.lineWidth=3; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-Ro,py); ctx.lineTo(Ro,py); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,py,110,PI,2*PI); ctx.lineWidth=2; ctx.stroke();
+  for(let a=0;a<=180;a++){
+    const th=a*PI/180, cx=Math.cos(th), sy=-Math.sin(th), len=a%10===0?34:a%5===0?24:14;
+    ctx.beginPath(); ctx.moveTo(cx*Ro,py+sy*Ro); ctx.lineTo(cx*(Ro-len),py+sy*(Ro-len));
+    ctx.lineWidth=a%10===0?2.5:1.5; ctx.stroke();
+  }
+  ctx.font='600 20px Arial, Helvetica, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let a=0;a<=180;a+=10){
+    const th=a*PI/180, cx=Math.cos(th), sy=-Math.sin(th);
+    [[Ro-58,a,'rgba(10,50,110,.95)'],[Ro-86,180-a,'rgba(140,40,40,.95)']].forEach(([r,v,col])=>{
+      ctx.save(); ctx.translate(cx*r,py+sy*r); ctx.rotate(PI/2-th); ctx.fillStyle=col; ctx.fillText(String(v),0,0); ctx.restore();
+    });
+  }
+  ctx.strokeStyle='rgba(20,70,140,0.9)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(-16,py); ctx.lineTo(16,py); ctx.moveTo(0,py-16); ctx.lineTo(0,py+16); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,py,6,0,2*PI); ctx.stroke();
+}
+function drawMath(ctx,it){
+  const d=mathDims(it); ctx.save();
+  ctx.translate(it.x,it.y); ctx.rotate(it.rot||0); const sc=it.sc||1; ctx.scale(sc,sc);
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  const x0=-d.w/2, y0=-d.h/2;
+  if(it.type==='numicon'){
+    const n=it.val, cols=n===1?1:2, rows=Math.ceil(n/2), col=NUMICON_COL[n]||'#999';
+    const has=(c,r)=> r>=0&&r<rows&&c>=0&&c<cols&&!(n%2===1&&n>1&&r===rows-1&&c===1);
+    ctx.fillStyle=col;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(has(c,r)) ctx.fillRect(x0+c*60-.5,y0+r*60-.5,61,61);
+    ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=4;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(!has(c,r)) continue;
+      const x=x0+c*60, y=y0+r*60; ctx.beginPath();
+      if(!has(c-1,r)){ ctx.moveTo(x,y); ctx.lineTo(x,y+60); }
+      if(!has(c+1,r)){ ctx.moveTo(x+60,y); ctx.lineTo(x+60,y+60); }
+      if(!has(c,r-1)){ ctx.moveTo(x,y); ctx.lineTo(x+60,y); }
+      if(!has(c,r+1)){ ctx.moveTo(x,y+60); ctx.lineTo(x+60,y+60); }
+      ctx.stroke();
+    }
+    for(let i=0;i<n;i++){
+      const r=Math.floor(i/2), c=n===1?0:i%2, cx=x0+c*60+30, cy=y0+r*60+30;
+      ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.arc(cx,cy,17,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(cx-2,cy-2,13,0,Math.PI*2); ctx.fill();
+    }
+  } else if(it.type==='token'){
+    const [bg,fg]=TOKEN_COL[it.val]||['#888','#fff'];
+    ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(0,0,55,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=5; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,45,0,Math.PI*2); ctx.stroke();
+    const t=String(it.val), fs=Math.min(40,84/(t.length*0.62));
+    ctx.fillStyle=fg; ctx.font='700 '+fs+'px Arial, Helvetica, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t,0,2);
+  } else if(it.type==='ones')     drawCells(ctx,x0,y0,1,1,40,'#f2c94c');
+  else if(it.type==='tens')       drawCells(ctx,x0,y0,1,10,40,'#5cc8a4');
+  else if(it.type==='hundreds')   drawCells(ctx,x0,y0,10,10,40,'#79aef2');
+  else if(it.type==='protractor') drawProtractor(ctx);
+  ctx.restore();
+}
+function hitMath(it,x,y,tol){
+  const d=mathDims(it), sc=it.sc||1, r=it.rot||0, dx=x-it.x, dy=y-it.y, c=Math.cos(-r), s=Math.sin(-r);
+  const lx=(dx*c-dy*s)/sc, ly=(dx*s+dy*c)/sc, t=tol/sc;
+  if(Math.abs(lx)>d.w/2+t || Math.abs(ly)>d.h/2+t) return false;
+  if(it.type==='protractor') return Math.hypot(lx,ly-150)<=350+t && ly<=200+t;
+  if(it.type==='token') return Math.hypot(lx,ly)<=55+t;
+  if(it.type==='numicon' && it.val>1 && it.val%2===1){
+    const rows=Math.ceil(it.val/2), col=Math.min(1,Math.max(0,Math.floor((lx+d.w/2)/60))), row=Math.min(rows-1,Math.max(0,Math.floor((ly+d.h/2)/60)));
+    if(row===rows-1 && col===1) return false;
+  }
+  return true;
+}
+function selOf(it){ const d=mathDims(it), sc=it.sc||1; return { math:true, cx:it.x, cy:it.y, rot:it.rot||0, w:d.w*sc, h:d.h*sc }; }
+function hitHandle(it,x,y){
+  const sl=selOf(it), r=sl.rot, dx=x-sl.cx, dy=y-sl.cy, c=Math.cos(-r), s=Math.sin(-r);
+  const lx=dx*c-dy*s, ly=dx*s+dy*c, T=44;
+  if(Math.hypot(lx-sl.w/2,ly+sl.h/2)<=T) return 'del';
+  if(Math.hypot(lx,ly+sl.h/2+60)<=T) return 'rot';
+  if(Math.hypot(lx-sl.w/2,ly-sl.h/2)<=T) return 'size';
+  return null;
+}
+function drawSelection(c,sel){
+  c.save(); c.strokeStyle='#3b82f6'; c.lineWidth=4;
+  if(!sel.math){ c.setLineDash([16,10]); c.strokeRect(sel.x,sel.y,sel.w,sel.h); c.restore(); return; }
+  c.translate(sel.cx,sel.cy); c.rotate(sel.rot);
+  c.setLineDash([16,10]); c.strokeRect(-sel.w/2,-sel.h/2,sel.w,sel.h); c.setLineDash([]);
+  c.beginPath(); c.moveTo(0,-sel.h/2); c.lineTo(0,-sel.h/2-34); c.stroke();
+  const knob=(x,y,col,icon)=>{
+    c.save(); c.translate(x,y); c.fillStyle=col; c.strokeStyle='#fff'; c.lineWidth=4;
+    c.beginPath(); c.arc(0,0,26,0,Math.PI*2); c.fill(); c.stroke();
+    c.strokeStyle='#fff'; c.fillStyle='#fff'; c.lineWidth=4; c.lineCap='round'; c.beginPath();
+    if(icon==='x'){ c.moveTo(-9,-9); c.lineTo(9,9); c.moveTo(9,-9); c.lineTo(-9,9); c.stroke(); }
+    else if(icon==='size'){ c.moveTo(-9,9); c.lineTo(9,-9); c.moveTo(9,-9); c.lineTo(9,0); c.moveTo(9,-9); c.lineTo(0,-9); c.moveTo(-9,9); c.lineTo(-9,0); c.moveTo(-9,9); c.lineTo(0,9); c.stroke(); }
+    else { c.arc(0,0,11,Math.PI*0.2,Math.PI*1.7); c.stroke(); c.beginPath(); c.moveTo(11*Math.cos(Math.PI*1.7)-8,11*Math.sin(Math.PI*1.7)-2); c.lineTo(11*Math.cos(Math.PI*1.7)+7,11*Math.sin(Math.PI*1.7)-3); c.lineTo(11*Math.cos(Math.PI*1.7)+1,11*Math.sin(Math.PI*1.7)+9); c.closePath(); c.fill(); }
+    c.restore();
+  };
+  knob(0,-sel.h/2-60,'#3b82f6','rot'); knob(sel.w/2,sel.h/2,'#3b82f6','size'); knob(sel.w/2,-sel.h/2,'#ef4444','x');
+  c.restore();
+}
+
+/* ---------- shared: time, beep, grid ---------- */
+function fmtTime(ms){ const t=Math.ceil(ms/1000), m=Math.floor(t/60); return String(m).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); }
+function beep(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    const a=beep.ctx||(beep.ctx=new AC()); if(a.state==='suspended') a.resume();
+    [0,.28,.56].forEach(d=>{ const o=a.createOscillator(), g=a.createGain(); o.frequency.value=880; g.gain.value=.15; o.connect(g); g.connect(a.destination); o.start(a.currentTime+d); o.stop(a.currentTime+d+.16); });
+  }catch(e){}
+}
+function cleanGrid(c){
+  if(!c || typeof c!=='object') return null;
+  return { on:!!c.on, type:['square','lines','dots'].includes(c.type)?c.type:'square',
+    size:Math.min(200,Math.max(12,+c.size||40)), alpha:Math.min(1,Math.max(.05,+c.alpha||.35)),
+    major:[0,5,10].includes(+c.major)?+c.major:0, color:/^#[0-9a-f]{6}$/i.test(c.color)?c.color:'#3b82f6' };
+}
+const _gridCache={};
+function gridCanvas(g){
+  const key=[g.type,g.size,g.color,g.alpha,g.major].join('|');
+  if(_gridCache.key===key) return _gridCache.c;
+  const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.strokeStyle=g.color; x.fillStyle=g.color; x.lineCap='butt';
+  if(g.type==='dots'){
+    x.globalAlpha=Math.min(1,g.alpha+.3);
+    for(let i=0;i*g.size<=W;i++) for(let j=0;j*g.size<=H;j++){
+      const big=g.major && i%g.major===0 && j%g.major===0;
+      x.beginPath(); x.arc(i*g.size,j*g.size,big?5:3,0,Math.PI*2); x.fill();
+    }
+  } else {
+    for(const major of [false,true]){
+      if(major && !g.major) continue;
+      x.beginPath();
+      if(g.type==='square') for(let i=0;i*g.size<=W;i++){ if((g.major&&i%g.major===0)===major){ x.moveTo(i*g.size+.5,0); x.lineTo(i*g.size+.5,H); } }
+      for(let j=0;j*g.size<=H;j++){ if((g.major&&j%g.major===0)===major){ x.moveTo(0,j*g.size+.5); x.lineTo(W,j*g.size+.5); } }
+      x.lineWidth=major?3:1.6; x.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; x.stroke();
+    }
+  }
+  _gridCache.key=key; _gridCache.c=c; return c;
+}
+function setGrid(b,cfg){ const g=cleanGrid(cfg); b.grid=g&&g.on?g:null; render(b); }
+
 /* A board = visible canvas + a student ink layer ('s') + a teacher ink layer ('t')
    + optional background picture. Separate layers mean the eraser only removes its
    owner's marks, and the teacher's marks can be wiped without touching student work. */
-function makeBoard(canvas){ const b={canvas,ctx:canvas.getContext('2d'),layers:{s:null,t:null},bg:null,token:0}; render(b); return b; }
+/* iPad Safari only allows sound after a tap, so prepare the audio on the first touch; then the timer beep can play later */
+['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,function unlock(){
+  try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; const a=beep.ctx||(beep.ctx=new AC()); if(a.state==='suspended') a.resume(); }catch(e){}
+},{passive:true}));
+function makeBoard(canvas){ const b={canvas,ctx:canvas.getContext('2d'),layers:{s:null,t:null,sm:null,tm:null},bg:null,grid:null,token:0}; render(b); return b; }
 function layerOf(b,key,create){
   if(!b.layers[key] && create){ const c=document.createElement('canvas'); c.width=W; c.height=H; b.layers[key]={c,ctx:c.getContext('2d')}; }
   return b.layers[key];
@@ -287,11 +488,66 @@ function layerOf(b,key,create){
 function render(b){
   const c=b.ctx; c.fillStyle='#fff'; c.fillRect(0,0,W,H);
   if(b.bg){ const k=Math.min(W/b.bg.width,H/b.bg.height), w=b.bg.width*k, h=b.bg.height*k; c.drawImage(b.bg,(W-w)/2,(H-h)/2,w,h); }
-  for(const k of ['s','t']) if(b.layers[k]) c.drawImage(b.layers[k].c,0,0);
+  if(b.grid) c.drawImage(gridCanvas(b.grid),0,0);
+  for(const k of ['s','sm','t','tm']) if(b.layers[k]) c.drawImage(b.layers[k].c,0,0);
+  if(b.sel) drawSelection(c,b.sel);
+}
+
+/* ---------- hit-testing / bounding boxes for the Move tool ---------- */
+const _mctx=document.createElement('canvas').getContext('2d');
+function textBox(it){
+  _mctx.font='600 '+it.size+'px Arial, Helvetica, sans-serif';
+  const lines=String(it.text||'').slice(0,500).split('\n');
+  return { x:it.x1, y:it.y1, w:Math.max(...lines.map(l=>_mctx.measureText(l).width),10), h:lines.length*it.size*1.25 };
+}
+function bboxOf(it){
+  const r=(it.size||0)/2;
+  if(it.kind==='text') return textBox(it);
+  if(it.kind==='pen'){
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(const p of it.pts){ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); }
+    return { x:x0-r, y:y0-r, w:x1-x0+2*r, h:y1-y0+2*r };
+  }
+  const x0=Math.min(it.x1,it.x2), y0=Math.min(it.y1,it.y2);
+  return { x:x0-r, y:y0-r, w:Math.abs(it.x2-it.x1)+2*r, h:Math.abs(it.y2-it.y1)+2*r };
+}
+function segDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
+  let t=l2?((px-ax)*dx+(py-ay)*dy)/l2:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+function hitItem(it,x,y,tol){
+  if(it.eraser) return false;
+  if(it.kind==='math') return hitMath(it,x,y,tol);
+  const r=(it.size||0)/2+tol;
+  if(it.kind==='pen'){
+    const p=it.pts;
+    if(p.length===1) return Math.hypot(x-p[0][0],y-p[0][1])<=r;
+    for(let i=1;i<p.length;i++) if(segDist(x,y,p[i-1][0],p[i-1][1],p[i][0],p[i][1])<=r) return true;
+    return false;
+  }
+  if(it.kind==='line') return segDist(x,y,it.x1,it.y1,it.x2,it.y2)<=r;
+  if(it.kind==='text'){ const b=textBox(it); return x>=b.x-tol&&x<=b.x+b.w+tol&&y>=b.y-tol&&y<=b.y+b.h+tol; }
+  const x0=Math.min(it.x1,it.x2), x1=Math.max(it.x1,it.x2), y0=Math.min(it.y1,it.y2), y1=Math.max(it.y1,it.y2);
+  if(it.kind==='rect'){
+    if(it.fill) return x>=x0-r&&x<=x1+r&&y>=y0-r&&y<=y1+r;
+    const inside=x>=x0-r&&x<=x1+r&&y>=y0-r&&y<=y1+r;
+    const deep=x>x0+r&&x<x1-r&&y>y0+r&&y<y1-r;
+    return inside && !deep;
+  }
+  if(it.kind==='circle'){
+    const cx=(x0+x1)/2, cy=(y0+y1)/2, rx=Math.max((x1-x0)/2,1), ry=Math.max((y1-y0)/2,1);
+    const n=Math.hypot((x-cx)/rx,(y-cy)/ry);
+    return it.fill ? n<=1+r/Math.min(rx,ry) : Math.abs(n-1)*Math.min(rx,ry)<=r;
+  }
+  return false;
 }
 function rebuild(b,key,items){
-  const L=layerOf(b,key,items.length>0);
-  if(L){ L.ctx.clearRect(0,0,W,H); for(const it of items) drawItem(L.ctx,it); }
+  const ink=items.filter(i=>i.kind!=='math'), mth=items.filter(i=>i.kind==='math');
+  const L=layerOf(b,key,ink.length>0);
+  if(L){ L.ctx.clearRect(0,0,W,H); for(const it of ink) drawItem(L.ctx,it); }
+  const M=layerOf(b,key+'m',mth.length>0);
+  if(M){ M.ctx.clearRect(0,0,W,H); for(const it of mth) drawItem(M.ctx,it); }
   render(b);
 }
 function penTail(b,key,it,from){ drawPenTail(layerOf(b,key,true).ctx,it,from); render(b); }
@@ -319,6 +575,7 @@ function applyOps(board,key,items,type,d){
       }
       break;
     case 'undo':  items=items.filter(x=>x.id!==d.id); rebuild(board,key,items); break;
+    case 'front': { const i=items.findIndex(x=>x.id===d.id); if(i>=0){ items.push(items.splice(i,1)[0]); rebuild(board,key,items); } break; }
     case 'clear': items=[]; rebuild(board,key,items); break;
   }
   return items;
@@ -358,13 +615,77 @@ function askText(cb){
   ta.addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ok(); } if(e.key==='Escape') close(); });
 }
 
+/* ---------- maths tools tray (drag onto the board, or tap to add) ---------- */
+const MATH_TABS=[
+  ['Numicon',[1,2,3,4,5,6,7,8,9,10].map(n=>({type:'numicon',val:n,label:String(n)}))],
+  ['Place value',[1,10,100,1000,10000,100000,1000000].map(v=>({type:'token',val:v,label:v.toLocaleString('en-GB')}))],
+  ['Base ten',[{type:'ones',label:'Ones'},{type:'tens',label:'Tens'},{type:'hundreds',label:'Hundreds'}]],
+  ['Protractor',[{type:'protractor',label:'Protractor'}]]
+];
+let MT={pad:null};
+function closeMathTray(){
+  document.getElementById('mt')?.remove();
+  if(MT.pad){ MT.pad.style.paddingBottom=''; MT.pad=null; }
+}
+function mathCanvas(spec,maxW,maxH,dpr){
+  const it={...spec,x:0,y:0,rot:0,sc:1}, d=mathDims(it), k=Math.min(maxW/d.w,maxH/d.h,1.2);
+  const cw=Math.ceil(d.w*k)+4, ch=Math.ceil(d.h*k)+4, c=document.createElement('canvas');
+  c.width=cw*dpr; c.height=ch*dpr; c.style.width=cw+'px'; c.style.height=ch+'px';
+  const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.translate(cw/2,ch/2); x.scale(k,k); drawMath(x,it);
+  return c;
+}
+function toggleMathTray(ed,padEl){
+  if(document.getElementById('mt')){ closeMathTray(); return; }
+  const tray=document.createElement('div'); tray.id='mt'; tray.className='mt';
+  tray.innerHTML='<div class="mt-head"><div class="mt-tabs"></div><div class="spacer"></div><span class="mt-hint">Drag onto the board, or tap to add. Use ↖ Move to turn, resize or delete.</span><button class="tool sm mt-x" aria-label="Close maths tools">✕</button></div><div class="mt-items"></div>';
+  document.body.appendChild(tray);
+  const tabs=tray.querySelector('.mt-tabs'), box=tray.querySelector('.mt-items');
+  const show=idx=>{
+    tabs.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',i===idx));
+    box.innerHTML='';
+    MATH_TABS[idx][1].forEach(spec=>{
+      const el=document.createElement('div'); el.className='mt-item';
+      el.appendChild(mathCanvas(spec,spec.type==='protractor'?200:96,110,2));
+      const lab=document.createElement('span'); lab.textContent=spec.label; el.appendChild(lab);
+      el.addEventListener('pointerdown',e=>{
+        e.preventDefault(); try{ el.setPointerCapture(e.pointerId); }catch(_){}
+        const sx=e.clientX, sy=e.clientY; let ghost=null, moved=false;
+        const mv=ev=>{
+          if(!moved && Math.hypot(ev.clientX-sx,ev.clientY-sy)>8){
+            moved=true; ghost=mathCanvas(spec,170,170,2); ghost.className='mt-ghost'; document.body.appendChild(ghost);
+          }
+          if(ghost){ ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; }
+        };
+        const done=ev=>{
+          el.removeEventListener('pointermove',mv); el.removeEventListener('pointerup',up); el.removeEventListener('pointercancel',cancel);
+          ghost?.remove();
+        };
+        const up=ev=>{
+          done(ev);
+          if(!moved){ ed.addMath(spec,null); return; }
+          const tr=tray.getBoundingClientRect();
+          if(ev.clientY>=tr.top) return;                      // dropped back on the tray: cancel
+          ed.addMath(spec,{x:ev.clientX,y:ev.clientY});
+        };
+        const cancel=ev=>done(ev);
+        el.addEventListener('pointermove',mv); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',cancel);
+      });
+      box.appendChild(el);
+    });
+  };
+  MATH_TABS.forEach(([name],i)=>{ const b=document.createElement('button'); b.className='tool sm'; b.textContent=name; b.onclick=()=>show(i); tabs.appendChild(b); });
+  tray.querySelector('.mt-x').onclick=closeMathTray;
+  show(0);
+  if(padEl){ MT.pad=padEl; padEl.style.paddingBottom=tray.offsetHeight+'px'; }
+}
+
 /* ---------- drawing editor (used by students AND by the teacher on a maximised screen) ----------
    o: {canvas, vp, board, key:'s'|'t', view, E:{tool,color,size,fill}, getItems(), setItems(a), send(msg)}  */
 function createEditor(o){
   const {canvas,vp,board,key,view,E}=o;
   const ac=new AbortController(), sg={signal:ac.signal};
   const ptrs=new Map();
-  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null;
+  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null;
   const items=()=>o.getItems();
   const pos=e=>{ const r=canvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; };
   const vpPt=(x,y)=>{ const r=vp.getBoundingClientRect(); return [x-r.left,y-r.top]; };
@@ -376,6 +697,29 @@ function createEditor(o){
     const a=items(), i=a.indexOf(it); if(i>=0) a.splice(i,1);
     rebuild(board,key,a); o.send({t:'undo',id:it.id});
   }
+  function snap(it){
+    if(it.kind==='pen') return {pts:it.pts.map(p=>p.slice())};
+    if(it.kind==='math') return {x:it.x,y:it.y,rot:it.rot||0,sc:it.sc||1};
+    return {x1:it.x1,y1:it.y1,x2:it.x2,y2:it.y2};
+  }
+  function moveItem(it,orig,dx,dy){
+    if(it.kind==='pen') it.pts=orig.pts.map(p=>[p[0]+dx,p[1]+dy]);
+    else if(it.kind==='math'){ it.x=orig.x+dx; it.y=orig.y+dy; }
+    else { it.x1=orig.x1+dx; it.y1=orig.y1+dy; if(orig.x2!==undefined){ it.x2=orig.x2+dx; it.y2=orig.y2+dy; } }
+  }
+  function cancelDrag(){
+    if(!drag) return;
+    moveItem(drag.it,drag.orig,0,0);
+    if(drag.it.kind==='math'){ drag.it.rot=drag.orig.rot; drag.it.sc=drag.orig.sc; }
+    board.sel = drag.it.kind==='math' && E.tool==='move' ? selOf(drag.it) : null;
+    rebuild(board,key,items()); o.send({t:'set',item:drag.it}); drag=null;
+  }
+  view.refreshSel=()=>{
+    if(E.tool!=='move') selId=null;
+    const it=selId && items().find(x=>x.id===selId && x.kind==='math');
+    if(!it) selId=null;
+    board.sel = it ? selOf(it) : null; render(board);
+  };
   function beginGesture(){
     const [a,b]=[...ptrs.values()]; const [mx,my]=vpPt((a.x+b.x)/2,(a.y+b.y)/2);
     gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:view.z,mx,my,px:view.px,py:view.py}; pan=null;
@@ -384,10 +728,31 @@ function createEditor(o){
     e.preventDefault();
     ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
     try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
-    if(ptrs.size>=2){ abortStroke(); beginGesture(); return; }       // two fingers = pinch zoom + pan
+    if(ptrs.size>=2){ abortStroke(); cancelDrag(); beginGesture(); return; }       // two fingers = pinch zoom + pan
     if(ptrs.size>2) return;
     if(E.tool==='hand'){ pan={id:e.pointerId}; return; }
     if(E.tool==='text') return;                                       // handled on click
+    if(E.tool==='move'){                                              // select, drag, rotate, resize, delete
+      const [x,y]=pos(e), tol=18*W/(view.bw*view.z), a=items();
+      const sel=selId && a.find(i=>i.id===selId && i.kind==='math');
+      if(sel){
+        const h=hitHandle(sel,x,y);
+        if(h==='del'){ a.splice(a.indexOf(sel),1); selId=null; board.sel=null; rebuild(board,key,a); o.send({t:'undo',id:sel.id}); return; }
+        if(h){ drag={ mode:h, it:sel, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(sel) }; return; }
+      }
+      for(let i=a.length-1;i>=0;i--){
+        if(hitItem(a[i],x,y,tol)){
+          const it=a[i];
+          if(it.kind==='math'){ a.push(a.splice(i,1)[0]); o.send({t:'front',id:it.id}); selId=it.id; board.sel=selOf(it); }
+          else { selId=null; board.sel=bboxOf(it); }
+          drag={ mode:'move', it, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(it) };
+          rebuild(board,key,a); return;
+        }
+      }
+      selId=null; board.sel=null; render(board);
+      return;
+    }
+    if(selId||board.sel){ selId=null; board.sel=null; }
     const [x,y]=pos(e), isPen=E.tool==='pen'||E.tool==='eraser';
     const it={ id:rid(10), kind:isPen?'pen':E.tool, color:E.color, eraser:E.tool==='eraser',
                size:E.tool==='eraser'?Math.max(E.size*3,24):E.size, fill:E.fill };
@@ -406,6 +771,20 @@ function createEditor(o){
       view.z=nz; view.px=mx-(gest.mx-gest.px)*r; view.py=my-(gest.my-gest.py)*r; view.apply(); return;
     }
     if(pan && pan.id===e.pointerId){ view.px+=dx; view.py+=dy; view.apply(); return; }
+    if(drag && e.pointerId===drag.ptr){
+      e.preventDefault();
+      const [x,y]=pos(e), it=drag.it;
+      if(drag.mode==='rot'){
+        let r=Math.atan2(y-it.y,x-it.x)+Math.PI/2; const deg=r*180/Math.PI, sn=Math.round(deg/15)*15;
+        if(Math.abs(deg-sn)<2.5) r=sn*Math.PI/180;
+        it.rot=r;
+      } else if(drag.mode==='size'){
+        const d=mathDims(it); it.sc=Math.min(6,Math.max(0.2,Math.hypot(x-it.x,y-it.y)/(Math.hypot(d.w,d.h)/2)));
+      } else moveItem(it,drag.orig,x-drag.ox,y-drag.oy);
+      board.sel = it.kind==='math' ? selOf(it) : bboxOf(it); rebuild(board,key,items());
+      const now=performance.now(); if(now-drag.last>60){ drag.last=now; o.send({t:'set',item:drag.it}); }
+      return;
+    }
     if(cur && e.pointerId===curPtr){
       e.preventDefault();
       if(cur.pts){
@@ -428,6 +807,7 @@ function createEditor(o){
     ptrs.delete(e.pointerId);
     if(ptrs.size<2) gest=null;
     if(pan && pan.id===e.pointerId) pan=null;
+    if(drag && e.pointerId===drag.ptr){ const it=drag.it; o.send({t:'set',item:it}); drag=null; board.sel=(it.kind==='math'&&E.tool==='move')?selOf(it):null; render(board); }
     if(cur && e.pointerId===curPtr){
       if(cur.pts) flush(); else o.send({t:'set',item:cur});
       cur=null; curPtr=null;
@@ -448,27 +828,39 @@ function createEditor(o){
     view.zoomAt(e.clientX-r.left,e.clientY-r.top,view.z*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)));
   },{passive:false,signal:ac.signal});
   return {
-    undo(){ const a=items(), it=a.pop(); if(!it) return; rebuild(board,key,a); o.send({t:'undo',id:it.id}); },
-    clearAll(){ o.setItems([]); rebuild(board,key,[]); o.send({t:'clear'}); },
-    destroy(){ ac.abort(); }
+    undo(){ const a=items(), it=a.pop(); if(!it) return; rebuild(board,key,a); o.send({t:'undo',id:it.id}); view.refreshSel(); },
+    clearAll(){ o.setItems([]); rebuild(board,key,[]); o.send({t:'clear'}); view.refreshSel(); },
+    deselect(){ selId=null; board.sel=null; render(board); },
+    addMath(spec,pt){
+      const r=vp.getBoundingClientRect();
+      let [x,y]=pt ? pos({clientX:pt.x,clientY:pt.y}) : pos({clientX:r.left+r.width/2,clientY:r.top+r.height*0.4});
+      x=Math.min(W-60,Math.max(60,x)); y=Math.min(H-60,Math.max(60,y));
+      const it={ id:rid(10), kind:'math', type:spec.type, val:spec.val, x, y, rot:0, sc:1 };
+      items().push(it); E.tool='move'; selId=it.id; board.sel=selOf(it);
+      if(view.syncTools) view.syncTools();
+      rebuild(board,key,items()); o.send({t:'set',item:it});
+    },
+    destroy(){ cancelDrag(); selId=null; board.sel=null; render(board); ac.abort(); }
   };
 }
 
 /* ---------- toolbar (tools, colours, size, undo/clear, zoom) ---------- */
 function buildToolbar(host,E,view,o){
   host.innerHTML='';
-  const TOOLS=[['pen','✏️ Pen'],['eraser','🧽 Eraser'],['line','╱ Line'],['rect','▭ Square'],['circle','◯ Circle'],['text','Aa Text'],['hand','✋ Move']];
+  const TOOLS=[['pen','✏️ Pen'],['eraser','🧽 Eraser'],['line','╱ Line'],['rect','▭ Square'],['circle','◯ Circle'],['text','Aa Text'],['move','↖ Move'],['hand','✋ Pan']];
   const grp=l=>{ const g=document.createElement('div'); g.className='group'; g.setAttribute('role','group'); g.setAttribute('aria-label',l); host.appendChild(g); return g; };
   const btn=(p,txt,cls,fn)=>{ const b=document.createElement('button'); b.className=cls; b.textContent=txt; b.onclick=fn; p.appendChild(b); return b; };
   const g1=grp('Tools');
-  const tb=TOOLS.map(([id,l])=>{ const b=btn(g1,l,'tool',()=>{ E.tool=id; refresh(); }); b.dataset.tool=id; return b; });
+  const tb=TOOLS.map(([id,l])=>{ const b=btn(g1,l,'tool',()=>{ E.tool=id; refresh(); if(view.refreshSel) view.refreshSel(); }); b.dataset.tool=id; return b; });
   const g2=grp('Colours');
-  const pick=c=>{ E.color=c; if(E.tool==='eraser'||E.tool==='hand') E.tool='pen'; refresh(); };
+  const pick=c=>{ E.color=c; if(E.tool==='eraser'||E.tool==='hand'||E.tool==='move') E.tool='pen'; refresh(); if(view.refreshSel) view.refreshSel(); };
   const sw=COLORS.map(c=>{ const b=document.createElement('button'); b.className='swatch'; b.style.background=c; b.dataset.c=c; b.setAttribute('aria-label','Colour '+c); b.onclick=()=>pick(c); g2.appendChild(b); return b; });
   const cp=document.createElement('input'); cp.type='color'; cp.value='#3b82f6'; cp.setAttribute('aria-label','Custom colour'); cp.oninput=()=>pick(cp.value); g2.appendChild(cp);
   const lab=document.createElement('label'); lab.className='size'; lab.append('Size ');
   const rg=document.createElement('input'); rg.type='range'; rg.min=2; rg.max=40; rg.value=E.size; rg.oninput=()=>{ E.size=+rg.value; }; lab.appendChild(rg); host.appendChild(lab);
   const g3=grp('Actions');
+  btn(g3,'🧮 Math tools','tool math',()=>{ if(o.mathTools) o.mathTools(); });
+  if(o.photo){ btn(g3,'📷 Photo','tool',o.photo); const rm=btn(g3,'Remove photo','tool sm hidden',o.removePhoto); view.photoUI=has=>rm.classList.toggle('hidden',!has); }
   const fillB=btn(g3,'Fill shapes','tool sm',()=>{ E.fill=!E.fill; refresh(); });
   btn(g3,'Undo','tool sm',o.undo); btn(g3,o.clearLabel,'tool sm',o.clear);
   const g4=grp('Zoom');
@@ -477,6 +869,7 @@ function buildToolbar(host,E,view,o){
   btn(g4,'+','tool sm',()=>view.zoomBy(1.4)).setAttribute('aria-label','Zoom in');
   btn(g4,'Fit','tool sm',()=>view.reset());
   view.onChange=v=>{ zl.textContent=Math.round(v.z*100)+'%'; };
+  view.syncTools=()=>refresh();
   function refresh(){
     tb.forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===E.tool));
     sw.forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===E.color));
@@ -505,7 +898,7 @@ function joinByCode(){
 /* =====================================================================
    TEACHER
    ===================================================================== */
-const T = { peer:null, code:null, students:new Map(), menuFor:null, retries:0, bg:null, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
+const T = { peer:null, code:null, students:new Map(), menuFor:null, retries:0, bg:null, grid:null, timer:{state:'off',total:0,remaining:0,endPerf:0}, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
 
 function initTeacher(){
   $('tile-size').oninput = e => $('grid').style.setProperty('--tile', e.target.value+'px');
@@ -513,6 +906,13 @@ function initTeacher(){
   $('btn-end').onclick = endRoom;
   $('btn-random').onclick = randomScreen;
   $('btn-draw').onclick = openDrawSend;
+  $('btn-tab').onclick = () => $('tab-file').click();
+  $('btn-timer').onclick = timerModal;
+  $('btn-grid').onclick = gridPanel;
+  $('t-timer-pause').onclick = toggleTimerPause;
+  $('t-timer-stop').onclick = stopTimer;
+  setInterval(timerTick,250);
+  $('tab-file').onchange = e => { const f=e.target.files[0]; e.target.value=''; if(f) fileToData(f,2200,1800000,tabModal); };
   $('btn-bg').onclick = () => $('bg-file').click();
   $('bg-file').onchange = e => { loadImageFile(e.target.files[0]); e.target.value=''; };
   $('btn-bg-off').onclick = () => applyBg(null,false);
@@ -534,7 +934,7 @@ function startRoom(code){
     localStorage.setItem('classboard_room', code);
     T.retries = 0;
     $('room-code').textContent = code;
-    ['room-chip','btn-qr','btn-random','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    ['room-chip','btn-qr','btn-random','btn-tab','btn-timer','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
     renderEmpty();
   });
   T.peer.on('connection', onStudentConnection);
@@ -604,13 +1004,18 @@ function onStudentConnection(conn){
       if(s.conn && s.conn!==conn && s.conn.open){ s.conn.__replaced=true; try{ s.conn.close(); }catch(e){} }
       s.conn=conn; s.online=true; s.name=name;
     } else {
-      s = { cid, name, conn, online:true, items:[], tItems:[], rec:null };
+      s = { cid, name, conn, online:true, items:[], tItems:[], photo:null, rec:null };
       createTile(s); T.students.set(cid,s);
     }
     s.tile.classList.remove('offline');
     s.tile.querySelector('.tile-name').textContent = s.name;
     updateCount();
-    try{ if(T.bg) conn.send({t:'bg',data:T.bg}); if(s.tItems.length) conn.send({t:'tfull',items:s.tItems}); }catch(e){}
+    try{
+      if(T.bg) conn.send({t:'bg',data:T.bg});
+      if(s.tItems.length) conn.send({t:'tfull',items:s.tItems});
+      if(T.grid&&T.grid.on) conn.send({t:'grid',cfg:T.grid});
+      if(T.timer.state!=='off') bcastTimer(conn);
+    }catch(e){}
   });
   conn.on('data', d => { const s=T.students.get(cid); if(s && s.conn===conn) handleStudentData(s,d); });
   conn.on('close', () => {
@@ -622,7 +1027,11 @@ function onStudentConnection(conn){
 
 function handleStudentData(s, d){
   if(!d || typeof d!=='object' || typeof d.t!=='string') return;
-  if(['full','set','pts','undo','clear'].includes(d.t)) s.items=applyOps(s.board,'s',s.items,d.t,d);
+  if(['full','set','pts','undo','clear','front'].includes(d.t)) s.items=applyOps(s.board,'s',s.items,d.t,d);
+  else if(d.t==='sbg'){                                   // student chose (or removed) their own photo
+    s.photo = (typeof d.data==='string' && d.data.length<4000000 && /^data:image\/(jpeg|png|webp);base64,/.test(d.data)) ? d.data : null;
+    setBg(s.board, s.photo || T.bg);
+  }
 }
 
 
@@ -656,6 +1065,95 @@ function randomScreen(){
     setTimeout(tick, 70 + step*step*1.1);
   };
   tick();
+}
+
+/* ---- class timer (shown on the hub and on every iPad) ---- */
+function tRem(){ const t=T.timer; return t.state==='running' ? Math.max(0,t.endPerf-performance.now()) : t.remaining; }
+function bcastTimer(only){
+  const t=T.timer, msg={t:'timer',state:t.state,remaining:tRem(),total:t.total};
+  if(only){ try{ only.send(msg); }catch(e){} return; }
+  for(const s of T.students.values()) if(s.conn?.open){ try{ s.conn.send(msg); }catch(e){} }
+}
+function timerUI(){
+  const t=T.timer, el=$('t-timer'); el.classList.toggle('hidden',t.state==='off'); if(t.state==='off') return;
+  const rem=tRem();
+  $('t-timer-text').textContent = t.state==='done' ? 'Time’s up!' : fmtTime(rem);
+  el.classList.toggle('done',t.state==='done'); el.classList.toggle('low',t.state==='running'&&rem<=10000);
+  $('t-timer-pause').textContent = t.state==='paused' ? '▶' : '⏸'; $('t-timer-pause').classList.toggle('hidden',t.state==='done');
+}
+function timerTick(){
+  const t=T.timer;
+  if(t.state==='running' && tRem()<=0){ t.state='done'; t.remaining=0; bcastTimer(); beep(); toast('⏱ Time’s up!',4000); }
+  timerUI();
+}
+function startTimer(ms){ const t=T.timer; t.state='running'; t.total=ms; t.remaining=ms; t.endPerf=performance.now()+ms; bcastTimer(); timerUI(); }
+function toggleTimerPause(){
+  const t=T.timer;
+  if(t.state==='running'){ t.remaining=tRem(); t.state='paused'; }
+  else if(t.state==='paused'){ t.endPerf=performance.now()+t.remaining; t.state='running'; }
+  bcastTimer(); timerUI();
+}
+function stopTimer(){ T.timer.state='off'; bcastTimer(); timerUI(); }
+function timerModal(){
+  const m=document.createElement('div'); m.className='modal';
+  const cur=T.timer.total||300000;
+  m.innerHTML=`<div class="modal-card"><h3>Set timer</h3>
+    <div class="row" style="justify-content:flex-start;align-items:center;margin:0">
+      <input class="text" id="tm-m" type="number" min="0" max="180" style="width:90px" aria-label="Minutes"><span>min</span>
+      <input class="text" id="tm-s" type="number" min="0" max="59" style="width:90px" aria-label="Seconds"><span>sec</span></div>
+    <div class="row" style="justify-content:flex-start;flex-wrap:wrap" id="tm-pre"></div>
+    <p style="color:var(--chalk-dim);margin:8px 0 0">Starts on the hub and on every student’s iPad.</p>
+    <div class="row"><button class="btn ghost" data-a="c">Cancel</button><button class="btn" data-a="go">Start timer</button></div></div>`;
+  document.body.appendChild(m);
+  const mi=m.querySelector('#tm-m'), se=m.querySelector('#tm-s');
+  const setv=ms=>{ mi.value=Math.floor(ms/60000); se.value=Math.floor(ms/1000)%60; };
+  setv(cur);
+  [1,2,3,5,10,15,20].forEach(n=>{ const b=document.createElement('button'); b.className='btn ghost'; b.textContent=n+' min'; b.onclick=()=>setv(n*60000); m.querySelector('#tm-pre').appendChild(b); });
+  const close=()=>m.remove(); m.querySelector('[data-a=c]').onclick=close; m.onclick=e=>{ if(e.target===m) close(); };
+  const go=()=>{ const ms=((+mi.value||0)*60+(+se.value||0))*1000; if(ms<1000){ toast('Set a time first'); return; } close(); startTimer(ms); };
+  m.querySelector('[data-a=go]').onclick=go; mi.focus(); mi.select();
+  m.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+}
+
+/* ---- grid overlay for student maths books ---- */
+function applyGrid(cfg){
+  T.grid=cleanGrid(cfg);
+  for(const s of T.students.values()){
+    setGrid(s.board,T.grid);
+    if(s.conn?.open){ try{ s.conn.send({t:'grid',cfg:T.grid}); }catch(e){} }
+  }
+}
+function gridPanel(){
+  const old=document.getElementById('gp'); if(old){ old.remove(); return; }
+  const g=T.grid||{on:true,type:'square',size:40,color:'#3b82f6',alpha:.35,major:5};
+  const p=document.createElement('div'); p.id='gp'; p.className='gp';
+  p.innerHTML=`<h3>Maths book grid <button class="btn ghost" data-a="x" style="padding:4px 10px" aria-label="Close">✕</button></h3>
+    <div class="seg" id="g-on"><button data-v="1">On</button><button data-v="0">Off</button></div>
+    <label>Style</label><div class="seg" id="g-type"><button data-v="square">Squares</button><button data-v="lines">Lines</button><button data-v="dots">Dots</button></div>
+    <label>Size</label><input type="range" id="g-size" min="16" max="160">
+    <label>Colour</label><div class="sws" id="g-col"></div>
+    <label>Line strength</label><input type="range" id="g-alpha" min="10" max="90">
+    <label>Darker line every</label><div class="seg" id="g-major"><button data-v="0">None</button><button data-v="5">5</button><button data-v="10">10</button></div>`;
+  document.body.appendChild(p);
+  const COLS=['#3b82f6','#6b7280','#22c55e','#ef4444','#111111'];
+  const cw=p.querySelector('#g-col');
+  COLS.forEach(c=>{ const b=document.createElement('button'); b.className='sw'; b.style.background=c; b.dataset.v=c; b.setAttribute('aria-label','Grid colour '+c); cw.appendChild(b); });
+  const refresh=()=>{
+    p.querySelectorAll('#g-on button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.v==='1')===g.on));
+    p.querySelectorAll('#g-type button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===g.type));
+    p.querySelectorAll('#g-major button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===g.major));
+    p.querySelectorAll('#g-col button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===g.color));
+    p.querySelector('#g-size').value=g.size; p.querySelector('#g-alpha').value=Math.round(g.alpha*100);
+  };
+  const push=()=>{ refresh(); applyGrid(g); };
+  p.querySelectorAll('#g-on button').forEach(b=>b.onclick=()=>{ g.on=b.dataset.v==='1'; push(); });
+  p.querySelectorAll('#g-type button').forEach(b=>b.onclick=()=>{ g.type=b.dataset.v; g.on=true; push(); });
+  p.querySelectorAll('#g-major button').forEach(b=>b.onclick=()=>{ g.major=+b.dataset.v; g.on=true; push(); });
+  p.querySelectorAll('#g-col button').forEach(b=>b.onclick=()=>{ g.color=b.dataset.v; g.on=true; push(); });
+  p.querySelector('#g-size').oninput=e=>{ g.size=+e.target.value; g.on=true; push(); };
+  p.querySelector('#g-alpha').oninput=e=>{ g.alpha=+e.target.value/100; g.on=true; push(); };
+  p.querySelector('[data-a=x]').onclick=()=>p.remove();
+  refresh(); push();                                   // opening the panel switches the grid on
 }
 
 /* ---- background picture (worksheets, diagrams, photos to annotate) ---- */
@@ -692,11 +1190,44 @@ function applyBg(data, clear){
   T.bg=data; $('btn-bg-off').classList.toggle('hidden',!data);
   $('btn-bg').textContent = data ? 'Change background' : 'Set background';
   for(const s of T.students.values()){
-    setBg(s.board,data);
+    if(data) s.photo=null;
+    setBg(s.board,s.photo||data);
     if(clear){ s.items=[]; s.tItems=[]; rebuild(s.board,'s',s.items); rebuild(s.board,'t',s.tItems); }
-    if(s.conn?.open){ try{ s.conn.send({t:'bg',data,clear:!!clear}); }catch(e){} }
+    if(s.conn?.open){ try{ s.conn.send({t:'bg',data,clear:!!clear,fresh:!!data}); }catch(e){} }
   }
   toast(data ? 'Background sent to students' : 'Background removed');
+}
+
+/* ---- send image as a browser tab (reference only, not drawable) ---- */
+function fileToData(file,maxSide,limit,cb){
+  if(!file || !file.type.startsWith('image/')){ toast('Please choose an image file (JPG or PNG)'); return; }
+  const url=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{
+    const k=Math.min(1,maxSide/Math.max(img.width,img.height));
+    const c=document.createElement('canvas'); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+    let q=.9, data=c.toDataURL('image/jpeg',q);
+    while(data.length>limit && q>.5){ q-=.08; data=c.toDataURL('image/jpeg',q); }
+    URL.revokeObjectURL(url); cb(data);
+  };
+  img.onerror=()=>{ URL.revokeObjectURL(url); toast('Couldn’t read that image. HEIC isn’t supported, so use JPG or PNG.',5000); };
+  img.src=url;
+}
+function tabModal(data){
+  const m=document.createElement('div'); m.className='modal';
+  m.innerHTML=`<div class="modal-card"><h3>Send as a new tab?</h3>
+    <img class="bg-prev" alt="Preview of the image">
+    <p style="color:var(--chalk-dim);margin:12px 0 0">Each student gets this image to open in its own browser tab for reference. They can’t draw on it and can close it when done.</p>
+    <div class="row"><button class="btn ghost" data-a="cancel">Cancel</button><button class="btn" data-a="send">Send to all students</button></div></div>`;
+  m.querySelector('img').src=data; document.body.appendChild(m);
+  const close=()=>m.remove();
+  m.querySelector('[data-a=cancel]').onclick=close; m.onclick=e=>{ if(e.target===m) close(); };
+  m.querySelector('[data-a=send]').onclick=()=>{ close(); sendTab(data); };
+}
+function sendTab(data){
+  let n=0;
+  for(const s of T.students.values()){ if(s.conn?.open){ try{ s.conn.send({t:'tab',data}); n++; }catch(e){} } }
+  toast(n ? 'Image sent to '+n+(n===1?' student':' students') : 'No students are connected');
 }
 
 /* ---- draw & send: teacher draws on a blank (or current-background) board, then sends it to every student ---- */
@@ -705,7 +1236,7 @@ function openDrawSend(){
   const ov=document.createElement('div'); ov.id='ds'; ov.className='ds';
   ov.innerHTML='<div class="ds-head"><strong>Draw &amp; send</strong>'+
     '<label class="ds-opt hidden"><input type="checkbox" checked> Draw on the current background</label><div class="spacer"></div>'+
-    '<button class="btn ghost" data-a="cancel">Cancel</button><button class="btn" data-a="send">Send to all students</button></div>'+
+    '<button class="btn ghost" data-a="cancel">Cancel</button><button class="btn ghost" data-a="tab">Send as image tab</button><button class="btn" data-a="send">Send as background</button></div>'+
     '<div class="toolbar ds-tools"></div><div class="ds-vp"><canvas width="'+W+'" height="'+H+'"></canvas></div>';
   document.body.appendChild(ov);
   const canvas=ov.querySelector('canvas'), vp=ov.querySelector('.ds-vp');
@@ -717,13 +1248,19 @@ function openDrawSend(){
   const editor=createEditor({ canvas, vp, board, key:'s', view, E:T.E, getItems:()=>D.items, setItems:a=>{ D.items=a; }, send:()=>{} });
   buildToolbar(ov.querySelector('.ds-tools'),T.E,view,{
     undo:()=>editor.undo(), clearLabel:'Clear all',
-    clear:()=>{ if(D.items.length && confirm('Clear everything you drew?')) editor.clearAll(); }
+    clear:()=>{ if(D.items.length && confirm('Clear everything you drew?')) editor.clearAll(); },
+    mathTools:()=>toggleMathTray(editor,ov)
   });
   const ro=new ResizeObserver(()=>view.fit()); ro.observe(vp);
-  const close=()=>{ ro.disconnect(); editor.destroy(); ov.remove(); };
+  const close=()=>{ closeMathTray(); ro.disconnect(); editor.destroy(); ov.remove(); };
   ov.querySelector('[data-a=cancel]').onclick=()=>{ if(D.items.length && !confirm('Discard this drawing?')) return; close(); };
+  ov.querySelector('[data-a=tab]').onclick=()=>{
+    if(!D.items.length){ toast('Draw something first'); return; }
+    editor.deselect(); tabModal(canvas.toDataURL('image/jpeg',.9));
+  };
   ov.querySelector('[data-a=send]').onclick=()=>{
     if(!D.items.length){ toast('Draw something first'); return; }
+    editor.deselect();
     let q=.9, data=canvas.toDataURL('image/jpeg',q);
     while(data.length>1000000 && q>.5){ q-=.08; data=canvas.toDataURL('image/jpeg',q); }
     bgModal(data, close);
@@ -743,6 +1280,7 @@ function createTile(s){
   $('grid').appendChild(t);
   s.tile=t; s.canvas=t.querySelector('canvas'); s.board=makeBoard(s.canvas);
   if(T.bg) setBg(s.board,T.bg);
+  if(T.grid&&T.grid.on) setGrid(s.board,T.grid);
   t.querySelector('.tile-name').textContent=s.name;
   t.querySelector('.kebab').onclick = e => { e.stopPropagation(); openMenu(s); };
 }
@@ -784,10 +1322,11 @@ function enterMax(s){
   s.view=makeView(body,s.canvas);
   s.editor=createEditor({ canvas:s.canvas, vp:body, board:s.board, key:'t', view:s.view, E:T.E,
     getItems:()=>s.tItems, setItems:a=>{ s.tItems=a; }, send:o=>sendToStudent(s,o) });
-  buildToolbar(tb,T.E,s.view,{ undo:()=>s.editor.undo(), clearLabel:'Remove my drawings', clear:()=>removeTeacherDrawings(s) });
+  buildToolbar(tb,T.E,s.view,{ undo:()=>s.editor.undo(), clearLabel:'Remove my drawings', clear:()=>removeTeacherDrawings(s), mathTools:()=>toggleMathTray(s.editor,s.tile) });
   s.ro=new ResizeObserver(()=>s.view.fit()); s.ro.observe(body);
 }
 function exitMax(){
+  closeMathTray();
   document.querySelectorAll('.tile.max').forEach(t=>{
     const s=T.students.get(t.dataset.cid);
     if(s){ s.ro?.disconnect(); s.editor?.destroy(); s.canvas.style.cssText=''; s.view=s.editor=s.ro=null; }
@@ -888,7 +1427,7 @@ function initStudent(code){
   /* whiteboard state */
   const canvas=$('sc'); canvas.width=W; canvas.height=H;
   const board=makeBoard(canvas);
-  const S={ items:[], tItems:[], kicked:false, joined:false, name:'', peer:null, conn:null };
+  const S={ items:[], tItems:[], kicked:false, joined:false, name:'', peer:null, conn:null, photo:null, teacherBg:null };
   const E={ tool:'pen', color:COLORS[0], size:6, fill:false };
   const send=o=>{ try{ if(S.conn && S.conn.open) S.conn.send(o); }catch(e){} };
   const view=makeView($('stage'),canvas);
@@ -897,12 +1436,74 @@ function initStudent(code){
   buildToolbar($('tb'),E,view,{
     undo:()=>editor.undo(),
     clearLabel:'Clear',
-    clear:()=>{ if(!S.items.length) return; if(!confirm('Clear your whiteboard?')) return; editor.clearAll(); }
+    clear:()=>{ if(!S.items.length) return; if(!confirm('Clear your whiteboard?')) return; editor.clearAll(); },
+    mathTools:()=>toggleMathTray(editor,$('student')),
+    photo:()=>$('photo-in').click(),
+    removePhoto:()=>{ S.photo=null; setBg(board,S.teacherBg); send({t:'sbg',data:null}); view.photoUI(false); toast('Photo removed'); }
   });
+  $('photo-in').onchange=e=>{
+    const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    fileToData(f,1800,1300000,data=>{
+      S.photo=data; setBg(board,data); send({t:'sbg',data}); view.photoUI(true);
+      toast('Photo added. Draw on it, and use zoom to look closely.',3500);
+    });
+  };
   ['gesturestart','gesturechange','dblclick'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault()));
   document.addEventListener('touchmove',e=>{ if(e.target===canvas) e.preventDefault(); },{passive:false});
   const fit=()=>view.fit();
   new ResizeObserver(fit).observe($('stage')); window.addEventListener('resize',fit);
+
+  /* class timer set by the teacher */
+  const TM={ state:'off', remaining:0, endPerf:0 }, pill=$('timer-pill');
+  const tmRem=()=>TM.state==='running' ? Math.max(0,TM.endPerf-performance.now()) : TM.remaining;
+  function tmRender(){
+    if(TM.state==='off'){ pill.className='hidden'; return; }
+    if(TM.state==='running' && tmRem()<=0){ TM.state='done'; beep(); }
+    const rem=tmRem();
+    pill.className = TM.state==='done' ? 'done' : TM.state==='paused' ? 'paused' : rem<=10000 ? 'low' : '';
+    pill.textContent = TM.state==='done' ? 'Time’s up!' : (TM.state==='paused'?'⏸ ':'⏱ ')+fmtTime(rem);
+  }
+  setInterval(tmRender,250);
+
+  /* reference images: opened in their own browser tab */
+  const refs=[];
+  function blobUrlFrom(dataUrl){
+    const m=/^data:(image\/(?:jpeg|png|webp));base64,(.*)$/.exec(dataUrl||''); if(!m) return null;
+    const bin=atob(m[2]), arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([arr],{type:m[1]}));
+  }
+  function openRef(r){
+    const w=window.open(r.url,'_blank');
+    if(!w){ toast('Your browser blocked the new tab. Allow pop-ups for this site, then tap Open again.',6000); return false; }
+    return true;
+  }
+  function addRef(dataUrl){
+    const url=blobUrlFrom(dataUrl); if(!url) return;
+    const r={url,time:new Date()}; refs.push(r); $('btn-refs').classList.remove('hidden');
+    $('btn-refs').textContent='📎 Images ('+refs.length+')';
+    let w=null; try{ w=window.open(url,'_blank'); }catch(e){}        // works only if pop-ups are allowed
+    if(w) return;
+    const d=document.createElement('div'); d.className='msg';          // otherwise: one tap opens it
+    d.innerHTML='<small>From your teacher</small><div class="body">Your teacher sent an image to look at.</div><button class="btn open">Open image</button><button class="x" aria-label="Dismiss">✕</button>';
+    d.querySelector('.x').onclick=()=>d.remove();
+    d.querySelector('.open').onclick=()=>{ if(openRef(r)) d.remove(); };
+    $('msgs').appendChild(d);
+  }
+  $('btn-refs').onclick=()=>{
+    const m=document.createElement('div'); m.className='modal';
+    m.innerHTML='<div class="modal-card"><h3>Images from your teacher</h3><div class="ref-list"></div><div class="row"><button class="btn ghost" data-a="c">Close</button></div></div>';
+    const list=m.querySelector('.ref-list');
+    refs.slice().reverse().forEach((r,i)=>{
+      const row=document.createElement('div'); row.className='ref-row';
+      const im=document.createElement('img'); im.src=r.url; im.alt='';
+      const lab=document.createElement('span'); lab.textContent='Image '+(refs.length-i)+' · '+r.time.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      const b=document.createElement('button'); b.className='btn'; b.textContent='Open'; b.onclick=()=>openRef(r);
+      row.append(im,lab,b); list.appendChild(row);
+    });
+    document.body.appendChild(m);
+    m.querySelector('[data-a=c]').onclick=()=>m.remove(); m.onclick=e=>{ if(e.target===m) m.remove(); };
+  };
 
   /* messages from teacher */
   function showMsg(text){
@@ -927,15 +1528,27 @@ function initStudent(code){
         if(!S.joined){ S.joined=true; hide('join'); show('student'); fit(); }
         setStatus(S.name+' · connected',false);
         send({t:'full',items:S.items});
+        if(S.photo) send({t:'sbg',data:S.photo});
       });
       conn.on('data',d=>{
         if(!d) return;
         if(d.t==='msg') showMsg(String(d.text||'').slice(0,400));
+        else if(d.t==='tab'){ addRef(d.data); }
+        else if(d.t==='grid'){ setGrid(board,d.cfg); }
+        else if(d.t==='timer'){
+          if(!['off','running','paused','done'].includes(d.state)) return;
+          const prev=TM.state;
+          TM.state=d.state; TM.remaining=Math.max(0,+d.remaining||0); TM.endPerf=performance.now()+TM.remaining;
+          if(d.state==='done' && prev!=='done') beep();
+          tmRender();
+        }
         else if(d.t==='bg'){
-          setBg(board, d.data||null);
+          S.teacherBg=d.data||null;
+          if(d.fresh && d.data){ S.photo=null; view.photoUI(false); }   // a new teacher background replaces a student's photo
+          if(!S.photo) setBg(board,S.teacherBg);
           if(d.clear){ S.items=[]; S.tItems=[]; rebuild(board,'s',S.items); rebuild(board,'t',S.tItems); send({t:'clear'}); }
         }
-        else if(['tfull','tset','tpts','tundo','tclear'].includes(d.t)){ S.tItems=applyOps(board,'t',S.tItems,d.t.slice(1),d); }
+        else if(['tfull','tset','tpts','tundo','tclear','tfront'].includes(d.t)){ S.tItems=applyOps(board,'t',S.tItems,d.t.slice(1),d); }
         else if(d.t==='kick'){ S.kicked=true; try{peer.destroy();}catch(e){} show('removed'); }
       });
       conn.on('close',()=>{ if(S.kicked) return; setStatus('Reconnecting…',true); setTimeout(connect,1500); });
