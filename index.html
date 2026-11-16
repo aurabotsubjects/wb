@@ -91,6 +91,8 @@ input.text:focus,textarea.text:focus{border-color:var(--marigold);outline:none}
 .lock-card p{margin:0;color:#5b665f}
 .tb-float{position:absolute;z-index:4;left:10px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:6px;opacity:.6}
 .tb-float:hover,.tb-float:focus-within{opacity:1}
+/* iPadOS draws its own round ✕ in the top-left corner in full screen: keep our buttons clear of it */
+@media (pointer:coarse){ #student.fs .tb-float{left:calc(84px + env(safe-area-inset-left)); top:calc(14px + env(safe-area-inset-top))} #student.fs .toolbar{padding-left:calc(84px + env(safe-area-inset-left))} }
 .tb-float .tool{min-height:40px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .tb-float .dot{display:inline-block;margin-left:6px;vertical-align:middle}
 .tb-float.bad .dot{background:var(--danger)}
@@ -1615,7 +1617,7 @@ function initStudent(code){
       else (fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl);
     }catch(e){ toast('Full screen isn’t available here. Try Share → Add to Home Screen.',4000); }
   }
-  function fsLabel(){ const t=isFs()?'✕ Exit full screen':'⛶ Full screen'; $('btn-fs').textContent=t; $('fl-fs').textContent=isFs()?'✕':'⛶'; }
+  function fsLabel(){ $('student').classList.toggle('fs',isFs()); const t=isFs()?'✕ Exit full screen':'⛶ Full screen'; $('btn-fs').textContent=t; $('fl-fs').textContent=isFs()?'✕':'⛶'; }
   if(fsOk){ $('btn-fs').classList.remove('hidden'); $('fl-fs').classList.remove('hidden'); }
   $('btn-hide-tb').onclick=()=>setToolbar(true);
   $('fl-show').onclick=()=>setToolbar(false);
