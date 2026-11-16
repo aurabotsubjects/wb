@@ -464,6 +464,8 @@ function hitMath(it,x,y,tol){
   return true;
 }
 function selOf(it){ const d=mathDims(it), sc=it.sc||1; return { math:true, cx:it.x, cy:it.y, rot:it.rot||0, w:d.w*sc, h:d.h*sc }; }
+function selFor(it){ if(it.kind==='math') return selOf(it); const b=bboxOf(it); return it.kind==='text'?{text:true,x:b.x,y:b.y,w:b.w,h:b.h}:b; }
+function hitTextHandle(it,x,y){ const b=textBox(it); return Math.hypot(x-(b.x+b.w),y-(b.y+b.h))<=44; }
 function hitHandle(it,x,y){
   const sl=selOf(it), r=sl.rot, dx=x-sl.cx, dy=y-sl.cy, c=Math.cos(-r), s=Math.sin(-r);
   const lx=dx*c-dy*s, ly=dx*s+dy*c, T=44;
@@ -474,10 +476,6 @@ function hitHandle(it,x,y){
 }
 function drawSelection(c,sel){
   c.save(); c.strokeStyle='#3b82f6'; c.lineWidth=4;
-  if(!sel.math){ c.setLineDash([16,10]); c.strokeRect(sel.x,sel.y,sel.w,sel.h); c.restore(); return; }
-  c.translate(sel.cx,sel.cy); c.rotate(sel.rot);
-  c.setLineDash([16,10]); c.strokeRect(-sel.w/2,-sel.h/2,sel.w,sel.h); c.setLineDash([]);
-  c.beginPath(); c.moveTo(0,-sel.h/2); c.lineTo(0,-sel.h/2-34); c.stroke();
   const knob=(x,y,col,icon)=>{
     c.save(); c.translate(x,y); c.fillStyle=col; c.strokeStyle='#fff'; c.lineWidth=4;
     c.beginPath(); c.arc(0,0,26,0,Math.PI*2); c.fill(); c.stroke();
@@ -487,6 +485,10 @@ function drawSelection(c,sel){
     else { c.arc(0,0,11,Math.PI*0.2,Math.PI*1.7); c.stroke(); c.beginPath(); c.moveTo(11*Math.cos(Math.PI*1.7)-8,11*Math.sin(Math.PI*1.7)-2); c.lineTo(11*Math.cos(Math.PI*1.7)+7,11*Math.sin(Math.PI*1.7)-3); c.lineTo(11*Math.cos(Math.PI*1.7)+1,11*Math.sin(Math.PI*1.7)+9); c.closePath(); c.fill(); }
     c.restore();
   };
+  if(!sel.math){ c.setLineDash([16,10]); c.strokeRect(sel.x,sel.y,sel.w,sel.h); c.setLineDash([]); if(sel.text) knob(sel.x+sel.w,sel.y+sel.h,'#3b82f6','size'); c.restore(); return; }
+  c.translate(sel.cx,sel.cy); c.rotate(sel.rot);
+  c.setLineDash([16,10]); c.strokeRect(-sel.w/2,-sel.h/2,sel.w,sel.h); c.setLineDash([]);
+  c.beginPath(); c.moveTo(0,-sel.h/2); c.lineTo(0,-sel.h/2-34); c.stroke();
   knob(0,-sel.h/2-60,'#3b82f6','rot'); knob(sel.w/2,sel.h/2,'#3b82f6','size'); knob(sel.w/2,-sel.h/2,'#ef4444','x');
   c.restore();
 }
@@ -712,12 +714,13 @@ function makeView(vp, canvas){
 }
 
 /* ---------- text entry dialog ---------- */
-function askText(cb){
+function askText(cb,initial,title){
   const m=document.createElement('div'); m.className='modal';
-  m.innerHTML='<div class="modal-card"><h3>Add text</h3><textarea class="text" rows="3" maxlength="300" placeholder="Type your text…" aria-label="Text"></textarea>'+
-    '<div class="row"><button class="btn ghost" data-a="c">Cancel</button><button class="btn" data-a="ok">Add text</button></div></div>';
+  m.innerHTML='<div class="modal-card"><h3></h3><textarea class="text" rows="3" maxlength="300" placeholder="Type your text…" aria-label="Text"></textarea>'+
+    '<div class="row"><button class="btn ghost" data-a="c">Cancel</button><button class="btn" data-a="ok"></button></div></div>';
   document.body.appendChild(m);
-  const ta=m.querySelector('textarea'); ta.focus();
+  m.querySelector('h3').textContent=title||'Add text'; m.querySelector('[data-a=ok]').textContent=initial!=null?'Save':'Add text';
+  const ta=m.querySelector('textarea'); if(initial!=null) ta.value=initial; ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
   const close=()=>m.remove();
   const ok=()=>{ const t=ta.value.trim(); close(); if(t) cb(t); };
   m.querySelector('[data-a=c]').onclick=close; m.querySelector('[data-a=ok]').onclick=ok;
@@ -795,7 +798,7 @@ function createEditor(o){
   const {canvas,vp,board,key,view,E}=o;
   const ac=new AbortController(), sg={signal:ac.signal};
   const ptrs=new Map();
-  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null, locked=false;
+  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null, locked=false, lastTap=null;
   const items=()=>o.getItems();
   const pos=e=>{ const r=canvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; };
   const P=(e,noSnap)=>{ const p=pos(e); return (E.snap && board.grid && !noSnap && E.tool!=='eraser') ? snapPt(board.grid,p) : p; };   // grid-snapped position
@@ -811,6 +814,7 @@ function createEditor(o){
   function snap(it){
     if(it.kind==='pen') return {pts:it.pts.map(p=>p.slice())};
     if(it.kind==='math') return {x:it.x,y:it.y,rot:it.rot||0,sc:it.sc||1};
+    if(it.kind==='text') return {x1:it.x1,y1:it.y1,size:it.size};
     return {x1:it.x1,y1:it.y1,x2:it.x2,y2:it.y2};
   }
   function moveItem(it,orig,dx,dy){
@@ -822,15 +826,23 @@ function createEditor(o){
     if(!drag) return;
     moveItem(drag.it,drag.orig,0,0);
     if(drag.it.kind==='math'){ drag.it.rot=drag.orig.rot; drag.it.sc=drag.orig.sc; }
-    board.sel = drag.it.kind==='math' && E.tool==='move' ? selOf(drag.it) : null;
+    if(drag.it.kind==='text') drag.it.size=drag.orig.size;
+    board.sel = (drag.it.kind==='math'||drag.it.kind==='text') && E.tool==='move' ? selFor(drag.it) : null;
     rebuild(board,key,items()); o.send({t:'set',item:drag.it}); drag=null;
   }
   view.refreshSel=()=>{
     if(E.tool!=='move') selId=null;
-    const it=selId && items().find(x=>x.id===selId && x.kind==='math');
+    const it=selId && items().find(x=>x.id===selId && (x.kind==='math'||x.kind==='text'));
     if(!it) selId=null;
-    board.sel = it ? selOf(it) : null; render(board);
+    board.sel = it ? selFor(it) : null; render(board);
   };
+  const textAt=(x,y)=>{ const tol=18*W/(view.bw*view.z), a=items(); for(let i=a.length-1;i>=0;i--) if(a[i].kind==='text' && hitItem(a[i],x,y,tol)) return a[i]; return null; };
+  function editText(it){
+    askText(text=>{
+      it.text=text; rebuild(board,key,items()); o.send({t:'set',item:it});
+      if(E.tool==='move'){ selId=it.id; board.sel=selFor(it); render(board); }
+    },it.text,'Edit text');
+  }
   function beginGesture(){
     const [a,b]=[...ptrs.values()]; const [mx,my]=vpPt((a.x+b.x)/2,(a.y+b.y)/2);
     gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:view.z,mx,my,px:view.px,py:view.py}; pan=null;
@@ -843,11 +855,26 @@ function createEditor(o){
     if(ptrs.size>=2){ abortStroke(); cancelDrag(); beginGesture(); return; }       // two fingers = pinch zoom + pan
     if(ptrs.size>2) return;
     if(E.tool==='hand'){ pan={id:e.pointerId}; return; }
+    const nowT=performance.now(), tapP=pos(e);
+    if(E.tool!=='eraser' && E.tool!=='text'){                          // double-click / double-tap on text = edit it
+      if(lastTap && nowT-lastTap.t<450 && Math.hypot(e.clientX-lastTap.cx,e.clientY-lastTap.cy)<30){
+        const tIt=textAt(tapP[0],tapP[1]);
+        if(tIt){
+          const a=items(), st=lastTap.id && a.find(i=>i.id===lastTap.id);
+          if(st && ((st.pts && st.pts.length<=3) || (!st.pts && Math.hypot((st.x2||0)-st.x1,(st.y2||0)-st.y1)<6))){ a.splice(a.indexOf(st),1); rebuild(board,key,a); o.send({t:'undo',id:st.id}); }
+          lastTap=null; if(selId!==tIt.id){ selId=null; board.sel=null; } editText(tIt); return;
+        }
+      }
+      lastTap={t:nowT,cx:e.clientX,cy:e.clientY,id:null};
+    }
     if(E.tool==='text') return;                                       // handled on click
     if(E.tool==='move'){                                              // select, drag, rotate, resize, delete
       const [x,y]=pos(e), tol=18*W/(view.bw*view.z), a=items();
-      const sel=selId && a.find(i=>i.id===selId && i.kind==='math');
-      if(sel){
+      const sel=selId && a.find(i=>i.id===selId && (i.kind==='math'||i.kind==='text'));
+      if(sel && sel.kind==='text' && hitTextHandle(sel,x,y)){
+        const b=textBox(sel); drag={ mode:'tsize', it:sel, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(sel), w0:b.w, h0:b.h }; return;
+      }
+      if(sel && sel.kind==='math'){
         const h=hitHandle(sel,x,y);
         if(h==='del'){ a.splice(a.indexOf(sel),1); selId=null; board.sel=null; rebuild(board,key,a); o.send({t:'undo',id:sel.id}); return; }
         if(h){ drag={ mode:h, it:sel, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(sel) }; return; }
@@ -856,6 +883,7 @@ function createEditor(o){
         if(hitItem(a[i],x,y,tol)){
           const it=a[i];
           if(it.kind==='math'){ a.push(a.splice(i,1)[0]); o.send({t:'front',id:it.id}); selId=it.id; board.sel=selOf(it); }
+          else if(it.kind==='text'){ selId=it.id; board.sel=selFor(it); }
           else { selId=null; board.sel=bboxOf(it); }
           drag={ mode:'move', it, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(it) };
           rebuild(board,key,a); return;
@@ -869,7 +897,7 @@ function createEditor(o){
     const it={ id:rid(10), kind:isPen?'pen':E.tool, color:E.color, eraser:E.tool==='eraser',
                size:E.tool==='eraser'?Math.max(E.size*3,24):E.size, fill:E.fill };
     if(isPen) it.pts=[[x,y]]; else { it.x1=x; it.y1=y; it.x2=x; it.y2=y; }
-    cur=it; curPtr=e.pointerId; items().push(it);
+    cur=it; curPtr=e.pointerId; items().push(it); if(lastTap) lastTap.id=it.id;
     if(isPen) drawLive(board,key,it); else rebuild(board,key,items());
     o.send({t:'set',item:it});
   },sg);
@@ -892,8 +920,11 @@ function createEditor(o){
         it.rot=r;
       } else if(drag.mode==='size'){
         const d=mathDims(it); it.sc=Math.min(6,Math.max(0.2,Math.hypot(x-it.x,y-it.y)/(Math.hypot(d.w,d.h)/2)));
+      } else if(drag.mode==='tsize'){
+        const k=((x-drag.orig.x1)/drag.w0+(y-drag.orig.y1)/drag.h0)/2;
+        it.size=Math.round(Math.min(300,Math.max(10,drag.orig.size*k)));
       } else moveItem(it,drag.orig,x-drag.ox,y-drag.oy);
-      board.sel = it.kind==='math' ? selOf(it) : bboxOf(it); rebuild(board,key,items());
+      board.sel = selFor(it); rebuild(board,key,items());
       const now=performance.now(); if(now-drag.last>60){ drag.last=now; o.send({t:'set',item:drag.it}); }
       return;
     }
@@ -920,7 +951,7 @@ function createEditor(o){
     ptrs.delete(e.pointerId);
     if(ptrs.size<2) gest=null;
     if(pan && pan.id===e.pointerId) pan=null;
-    if(drag && e.pointerId===drag.ptr){ const it=drag.it; o.send({t:'set',item:it}); drag=null; board.sel=(it.kind==='math'&&E.tool==='move')?selOf(it):null; render(board); }
+    if(drag && e.pointerId===drag.ptr){ const it=drag.it; o.send({t:'set',item:it}); drag=null; board.sel=((it.kind==='math'||it.kind==='text')&&E.tool==='move')?selFor(it):null; if(!board.sel) selId=null; render(board); }
     if(cur && e.pointerId===curPtr){
       if(cur.pts) flush(); else o.send({t:'set',item:cur});
       cur=null; curPtr=null;
@@ -931,6 +962,7 @@ function createEditor(o){
   canvas.addEventListener('click',e=>{
     if(locked || E.tool!=='text') return;
     const [x,y]=P(e);
+    const ex=textAt(...pos(e)); if(ex){ editText(ex); return; }
     askText(text=>{
       const it={ id:rid(10), kind:'text', color:E.color, size:20+E.size*3, x1:x, y1:y, text };
       items().push(it); drawLive(board,key,it); o.send({t:'set',item:it});

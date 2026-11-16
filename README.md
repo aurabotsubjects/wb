@@ -49,3 +49,8 @@ Students connect to the teacher directly over WebRTC using [PeerJS](https://peer
 ## Ideas for later
 
 Multi-page PDF worksheets, portrait-shaped boards, message all students, save a student's board as PNG, pages/backgrounds (grid, lined), student raise-hand button.
+
+## Editing and resizing text
+
+- **Edit:** double-click (or double-tap) any text on the board to change it. With the **Aa Text** tool a single click on existing text edits it.
+- **Resize:** with **↖ Move**, tap text to select it, then drag the blue corner handle to make it bigger or smaller. Drag the text itself to move it.
