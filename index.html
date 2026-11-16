@@ -81,6 +81,19 @@ input.text:focus,textarea.text:focus{border-color:var(--marigold);outline:none}
 .ds-tools{margin:10px 16px 0;border-radius:12px;border:1px solid var(--line)}
 .ds-vp{flex:1;min-height:0;position:relative;overflow:hidden;margin:10px 16px 16px;background:#d5d9d2;border-radius:8px}
 .ds-vp canvas{position:absolute;left:0;top:0;transform-origin:0 0;touch-action:none;cursor:crosshair;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+.lock-badge{color:var(--marigold-ink);background:var(--marigold);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
+.tile.locked{border-color:var(--marigold)}
+.btn.lock-on{background:var(--marigold);color:var(--marigold-ink);border-color:var(--marigold)}
+#lock-overlay{position:absolute;inset:0;z-index:5;background:rgba(20,35,31,.5);display:flex;align-items:center;justify-content:center;padding:20px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:not-allowed}
+.lock-card{background:var(--chalk);color:var(--ink);border:3px solid var(--marigold);border-radius:18px;padding:22px 30px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.45);max-width:min(420px,100%)}
+.lock-card .ico{font-size:2.6rem;line-height:1}
+.lock-card h2{margin:6px 0 4px;font-size:1.5rem}
+.lock-card p{margin:0;color:#5b665f}
+.tb-float{position:absolute;z-index:4;left:10px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:6px;opacity:.6}
+.tb-float:hover,.tb-float:focus-within{opacity:1}
+.tb-float .tool{min-height:40px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.tb-float .dot{display:inline-block;margin-left:6px;vertical-align:middle}
+.tb-float.bad .dot{background:var(--danger)}
 .vis-hidden{position:fixed;left:-9999px;width:1px;height:1px;opacity:0}
 .t-timer{position:fixed;left:16px;bottom:16px;z-index:65;display:flex;align-items:center;gap:8px;background:var(--board-2);border:2px solid var(--marigold);color:var(--chalk);border-radius:999px;padding:6px 8px 6px 18px;font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .t-timer button{background:var(--board);color:var(--chalk);border:0;border-radius:50%;width:36px;height:36px;font-size:1rem}
@@ -115,6 +128,26 @@ input.text:focus,textarea.text:focus{border-color:var(--marigold);outline:none}
 .empty p{color:var(--chalk-dim);margin:0 0 12px;max-width:34ch}
 .qr-box{background:#fff;padding:14px;border-radius:14px;line-height:0}
 .link-box{font-size:.85rem;color:var(--chalk-dim);word-break:break-all;max-width:34ch;cursor:pointer;text-decoration:underline dotted}
+
+.lobby-view{flex:1;overflow:auto;padding:32px 20px}
+.lobby-card{display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start;justify-content:center;max-width:1100px;margin:0 auto}
+.lobby-qr{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.lobby-qr .code{font-size:2.4rem;font-weight:700;letter-spacing:.14em}
+.lobby-qr .hint{color:var(--chalk-dim);max-width:30ch;margin:0}
+.lobby-side{flex:1;min-width:300px;max-width:560px;display:flex;flex-direction:column;gap:14px}
+.lobby-side h2{margin:0;font-size:2rem;letter-spacing:-.02em}
+.joined-list{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;min-height:120px;max-height:46vh;overflow:auto;background:var(--board-2);border:2px solid var(--board-3);border-radius:14px;padding:12px}
+.joined-empty{color:var(--chalk-dim);align-self:center;margin:0 auto}
+.joined-chip{display:flex;align-items:center;gap:8px;background:var(--board);border:2px solid var(--board-3);border-radius:999px;padding:6px 8px 6px 14px;font-weight:600}
+.joined-chip.offline{opacity:.5}
+.joined-chip .dot{flex:none}
+.joined-chip button{background:transparent;border:0;color:var(--chalk-dim);width:26px;height:26px;border-radius:50%;font-size:1rem;line-height:1}
+.joined-chip button:hover{background:var(--board-3);color:var(--chalk)}
+.lobby-start{font-size:1.2rem;padding:16px 24px!important}
+#teacher.lobby .needs-session{display:none!important}
+#wait-overlay{position:absolute;inset:0;z-index:30;background:var(--board);color:var(--chalk);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;touch-action:none;-webkit-user-select:none;user-select:none}
+#wait-overlay h2{font-size:2rem;margin:0 0 8px}
+#wait-overlay p{margin:0;color:var(--chalk-dim);font-size:1.1rem}
 
 /* ---------- Modals ---------- */
 .modal{position:fixed;inset:0;background:rgba(5,12,10,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -192,22 +225,39 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
   <div class="topbar">
     <h1>ClassBoard</h1>
     <div class="chip hidden" id="room-chip"><small>Room</small><span id="room-code"></span></div>
-    <button class="btn ghost hidden" id="btn-qr">Show QR code</button>
-    <button class="btn hidden" id="btn-random">🎲 Random screen</button>
-    <button class="btn ghost hidden" id="btn-tab">🖼️ Send image as tab</button>
+    <button class="btn ghost hidden needs-session" id="btn-qr">Show QR code</button>
+    <button class="btn hidden needs-session" id="btn-random">🎲 Random screen</button>
+    <button class="btn ghost hidden needs-session" id="btn-tab">🖼️ Send image as tab</button>
     <input type="file" id="tab-file" accept="image/*" class="hidden">
-    <button class="btn ghost hidden" id="btn-timer">⏱ Timer</button>
-    <button class="btn ghost hidden" id="btn-grid">▦ Grid</button>
-    <button class="btn ghost hidden" id="btn-draw">✏️ Draw &amp; send</button>
-    <button class="btn ghost hidden" id="btn-bg">Set background</button>
-    <button class="btn ghost hidden" id="btn-bg-off">Remove background</button>
+    <button class="btn ghost hidden needs-session" id="btn-lock">🔒 Lock all</button>
+    <button class="btn ghost hidden needs-session" id="btn-timer">⏱ Timer</button>
+    <button class="btn ghost hidden needs-session" id="btn-grid">▦ Grid</button>
+    <button class="btn ghost hidden needs-session" id="btn-draw">✏️ Draw &amp; send</button>
+    <button class="btn ghost hidden needs-session" id="btn-bg">Set background</button>
+    <button class="btn ghost hidden needs-session" id="btn-bg-off">Remove background</button>
     <input type="file" id="bg-file" accept="image/*" class="hidden">
     <span class="chip hidden" id="count-chip">0 students</span>
     <div class="spacer"></div>
-    <label class="size-ctl hidden" id="size-ctl">Screen size
+    <label class="size-ctl hidden needs-session" id="size-ctl">Screen size
       <input type="range" id="tile-size" min="200" max="560" value="320">
     </label>
     <button class="btn danger hidden" id="btn-end">End room</button>
+  </div>
+  <div id="lobby" class="lobby-view hidden">
+    <div class="lobby-card">
+      <div class="lobby-qr">
+        <div class="qr-box" id="lobby-qr"></div>
+        <div class="code" id="lobby-code"></div>
+        <p class="hint">Scan with the iPad camera, or go to the link and enter the room code.</p>
+        <div class="link-box" id="lobby-link" title="Click to copy"></div>
+      </div>
+      <div class="lobby-side">
+        <h2 id="lobby-title">Waiting for students</h2>
+        <div class="joined-list" id="joined-list" aria-live="polite"></div>
+        <button class="btn lobby-start" id="btn-start" disabled>Start session</button>
+        <p class="hint" style="color:var(--chalk-dim);margin:0">The QR code stays up until you press Start. Students who join now will wait on a holding screen.</p>
+      </div>
+    </div>
   </div>
   <div id="grid">
     <div class="empty" id="teacher-start">
@@ -224,10 +274,16 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
   <div class="toolbar">
     <div id="tb" class="tb-inner"></div>
     <button class="tool sm hidden" id="btn-refs">📎 Images</button>
+    <button class="tool sm hidden" id="btn-fs" aria-label="Full screen">⛶ Full screen</button>
+    <button class="tool sm" id="btn-shot" aria-label="Screenshot">📸 Screenshot</button>
+    <button class="tool sm" id="btn-hide-tb" aria-label="Hide toolbar">▲ Hide toolbar</button>
     <div class="status" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
   </div>
   <div id="stage"><canvas id="sc"></canvas><div id="timer-pill" class="hidden"></div></div>
+  <div id="tb-float" class="tb-float hidden"><button class="tool" id="fl-show" aria-label="Show toolbar">▼ Tools<span class="dot"></span></button><button class="tool" id="fl-shot" aria-label="Screenshot">📸</button><button class="tool hidden" id="fl-fs" aria-label="Full screen">⛶</button></div>
   <div id="msgs"></div>
+  <div id="wait-overlay" class="hidden"><div><h2>You’re in! 🎉</h2><p>Waiting for your teacher to start the session…</p></div></div>
+  <div id="lock-overlay" class="hidden" role="alertdialog" aria-live="assertive" aria-label="Screen locked"><div class="lock-card"><div class="ico">🔒</div><h2>Screen locked</h2><p>Your teacher has locked your whiteboard. Please wait.</p></div></div>
 </div>
 <div id="join" class="hidden">
   <div class="choice">
@@ -685,7 +741,7 @@ function createEditor(o){
   const {canvas,vp,board,key,view,E}=o;
   const ac=new AbortController(), sg={signal:ac.signal};
   const ptrs=new Map();
-  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null;
+  let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null, locked=false;
   const items=()=>o.getItems();
   const pos=e=>{ const r=canvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; };
   const vpPt=(x,y)=>{ const r=vp.getBoundingClientRect(); return [x-r.left,y-r.top]; };
@@ -726,6 +782,7 @@ function createEditor(o){
   }
   canvas.addEventListener('pointerdown',e=>{
     e.preventDefault();
+    if(locked) return;
     ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
     try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
     if(ptrs.size>=2){ abortStroke(); cancelDrag(); beginGesture(); return; }       // two fingers = pinch zoom + pan
@@ -816,7 +873,7 @@ function createEditor(o){
   canvas.addEventListener('pointerup',up,sg); canvas.addEventListener('pointercancel',up,sg);
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),sg);
   canvas.addEventListener('click',e=>{
-    if(E.tool!=='text') return;
+    if(locked || E.tool!=='text') return;
     const [x,y]=pos(e);
     askText(text=>{
       const it={ id:rid(10), kind:'text', color:E.color, size:20+E.size*3, x1:x, y1:y, text };
@@ -824,13 +881,17 @@ function createEditor(o){
     });
   },sg);
   vp.addEventListener('wheel',e=>{
-    e.preventDefault(); const r=vp.getBoundingClientRect();
+    e.preventDefault(); if(locked) return; const r=vp.getBoundingClientRect();
     view.zoomAt(e.clientX-r.left,e.clientY-r.top,view.z*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)));
   },{passive:false,signal:ac.signal});
   return {
     undo(){ const a=items(), it=a.pop(); if(!it) return; rebuild(board,key,a); o.send({t:'undo',id:it.id}); view.refreshSel(); },
     clearAll(){ o.setItems([]); rebuild(board,key,[]); o.send({t:'clear'}); view.refreshSel(); },
     deselect(){ selId=null; board.sel=null; render(board); },
+    setLocked(v){                                   // teacher lock: drop whatever is in progress, ignore all input
+      locked=!!v;
+      if(locked){ abortStroke(); cancelDrag(); ptrs.clear(); gest=null; pan=null; selId=null; board.sel=null; render(board); }
+    },
     addMath(spec,pt){
       const r=vp.getBoundingClientRect();
       let [x,y]=pt ? pos({clientX:pt.x,clientY:pt.y}) : pos({clientX:r.left+r.width/2,clientY:r.top+r.height*0.4});
@@ -898,16 +959,18 @@ function joinByCode(){
 /* =====================================================================
    TEACHER
    ===================================================================== */
-const T = { peer:null, code:null, students:new Map(), menuFor:null, retries:0, bg:null, grid:null, timer:{state:'off',total:0,remaining:0,endPerf:0}, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
+const T = { peer:null, code:null, open:false, started:false, lockAll:false, lockedCids:new Set(), students:new Map(), menuFor:null, retries:0, bg:null, grid:null, timer:{state:'off',total:0,remaining:0,endPerf:0}, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
 
 function initTeacher(){
   $('tile-size').oninput = e => $('grid').style.setProperty('--tile', e.target.value+'px');
   $('btn-qr').onclick = showQrModal;
   $('btn-end').onclick = endRoom;
+  $('btn-start').onclick = startSession;
   $('btn-random').onclick = randomScreen;
   $('btn-draw').onclick = openDrawSend;
   $('btn-tab').onclick = () => $('tab-file').click();
   $('btn-timer').onclick = timerModal;
+  $('btn-lock').onclick = () => lockAll(!anyLocked());
   $('btn-grid').onclick = gridPanel;
   $('t-timer-pause').onclick = toggleTimerPause;
   $('t-timer-stop').onclick = stopTimer;
@@ -929,13 +992,18 @@ function initTeacher(){
 
 function startRoom(code){
   T.code = code;
+  T.started = localStorage.getItem('classboard_started') === code;   // a refresh mid-class skips the lobby
+  loadLocks(code);
   T.peer = new Peer(ID_PREFIX+code, PEER_OPTS);
   T.peer.on('open', () => {
     localStorage.setItem('classboard_room', code);
     T.retries = 0;
     $('room-code').textContent = code;
-    ['room-chip','btn-qr','btn-random','btn-tab','btn-timer','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-timer','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    T.open = true;
     renderEmpty();
+    renderLobby();
+    applyMode();
   });
   T.peer.on('connection', onStudentConnection);
   T.peer.on('disconnected', () => { try{ T.peer.reconnect(); }catch(e){} });
@@ -953,6 +1021,47 @@ function startRoom(code){
 }
 
 function joinUrl(){ return location.origin + location.pathname + '?room=' + T.code; }
+
+/* ---- lobby: QR stays up and names collect until the teacher presses Start ---- */
+function applyMode(){
+  const lobby = T.open && !T.started;
+  $('teacher').classList.toggle('lobby', lobby);
+  $('lobby').classList.toggle('hidden', !lobby);
+  $('grid').classList.toggle('hidden', lobby);
+}
+function renderLobby(){
+  $('lobby-code').textContent = T.code;
+  const q=$('lobby-qr'); q.innerHTML='';
+  new QRCode(q, { text: joinUrl(), width:300, height:300, correctLevel: QRCode.CorrectLevel.M });
+  const lk=$('lobby-link'); lk.textContent=joinUrl();
+  lk.onclick = () => { navigator.clipboard?.writeText(joinUrl()); toast('Link copied'); };
+  updateLobbyList();
+}
+function updateLobbyList(){
+  const list=$('joined-list'); if(!list) return;
+  const all=[...T.students.values()], online=all.filter(s=>s.online).length;
+  list.innerHTML='';
+  if(!all.length){
+    const p=document.createElement('p'); p.className='joined-empty'; p.textContent='No one has joined yet'; list.appendChild(p);
+  }
+  for(const s of all){
+    const c=document.createElement('div'); c.className='joined-chip'+(s.online?'':' offline');
+    const d=document.createElement('span'); d.className='dot';
+    const n=document.createElement('span'); n.textContent=s.name;
+    const x=document.createElement('button'); x.textContent='✕'; x.setAttribute('aria-label','Remove '+s.name); x.onclick=()=>kickUser(s);
+    c.append(d,n,x); list.appendChild(c);
+  }
+  $('lobby-title').textContent = online ? online+(online===1?' student has joined':' students have joined') : 'Waiting for students';
+  const b=$('btn-start'); b.disabled = !online;
+  b.textContent = online ? 'Start session ('+online+')' : 'Start session';
+}
+function startSession(){
+  if(T.started) return;
+  T.started = true;
+  try{ localStorage.setItem('classboard_started', T.code); }catch(e){}
+  for(const s of T.students.values()) if(s.conn?.open){ try{ s.conn.send({t:'lobby',on:false}); }catch(e){} }
+  applyMode(); updateCount();
+}
 
 function renderEmpty(){
   let box = $('teacher-start');
@@ -972,6 +1081,7 @@ function updateCount(){
   const online=[...T.students.values()].filter(s=>s.online).length;
   $('count-chip').textContent = online + (online===1?' student':' students');
   const box=$('teacher-start'); if(box) box.classList.toggle('hidden', T.students.size>0);
+  updateLobbyList();
 }
 
 function showQrModal(){
@@ -988,7 +1098,7 @@ function endRoom(){
   if(!confirm('End the room? All students will be disconnected.')) return;
   for(const s of T.students.values()){ try{ s.conn?.send({t:'kick'}); }catch(e){} if(s.rec) stopRecording(s); }
   try{ T.peer.destroy(); }catch(e){}
-  localStorage.removeItem('classboard_room');
+  localStorage.removeItem('classboard_room'); localStorage.removeItem('classboard_locks'); localStorage.removeItem('classboard_started');
   location.href = location.pathname;
 }
 
@@ -1004,13 +1114,16 @@ function onStudentConnection(conn){
       if(s.conn && s.conn!==conn && s.conn.open){ s.conn.__replaced=true; try{ s.conn.close(); }catch(e){} }
       s.conn=conn; s.online=true; s.name=name;
     } else {
-      s = { cid, name, conn, online:true, items:[], tItems:[], photo:null, rec:null };
+      s = { cid, name, conn, online:true, items:[], tItems:[], photo:null, rec:null, locked: T.lockAll || T.lockedCids.has(cid) };
       createTile(s); T.students.set(cid,s);
     }
     s.tile.classList.remove('offline');
     s.tile.querySelector('.tile-name').textContent = s.name;
     updateCount();
+    updateLockUI();
     try{
+      conn.send({t:'lobby',on:!T.started});
+      conn.send({t:'lock',on:!!s.locked});
       if(T.bg) conn.send({t:'bg',data:T.bg});
       if(s.tItems.length) conn.send({t:'tfull',items:s.tItems});
       if(T.grid&&T.grid.on) conn.send({t:'grid',cfg:T.grid});
@@ -1065,6 +1178,38 @@ function randomScreen(){
     setTimeout(tick, 70 + step*step*1.1);
   };
   tick();
+}
+
+/* ---- lock screens: teacher freezes a student's board (one screen, or all of them) ---- */
+function loadLocks(code){
+  try{
+    const v=JSON.parse(localStorage.getItem('classboard_locks')||'null');
+    if(v && v.code===code){ T.lockAll=!!v.all; T.lockedCids=new Set(Array.isArray(v.cids)?v.cids:[]); }
+  }catch(e){}
+}
+function saveLocks(){
+  try{ localStorage.setItem('classboard_locks', JSON.stringify({ code:T.code, all:T.lockAll, cids:[...T.lockedCids] })); }catch(e){}
+}
+function anyLocked(){ return T.lockAll || [...T.students.values()].some(s=>s.locked); }
+function updateLockUI(){
+  const b=$('btn-lock'), on=anyLocked();
+  b.textContent = on ? '🔓 Unlock all' : '🔒 Lock all';
+  b.classList.toggle('lock-on',on);
+}
+function setLocked(s,on,quiet){
+  s.locked=!!on;
+  if(s.locked) T.lockedCids.add(s.cid); else T.lockedCids.delete(s.cid);
+  s.tile.classList.toggle('locked',s.locked);
+  s.tile.querySelector('.lock-badge').classList.toggle('hidden',!s.locked);
+  if(s.conn?.open){ try{ s.conn.send({t:'lock',on:s.locked}); }catch(e){} }
+  if(!quiet){ saveLocks(); updateLockUI(); toast((s.locked?'🔒 Locked ':'🔓 Unlocked ')+s.name+'’s screen'); }
+}
+function lockAll(on){
+  T.lockAll=!!on;
+  if(!on) T.lockedCids.clear();
+  for(const s of T.students.values()) setLocked(s,on,true);
+  saveLocks(); updateLockUI();
+  toast(on ? '🔒 All screens locked' + (T.students.size?'':' (students who join will be locked too)') : '🔓 All screens unlocked');
 }
 
 /* ---- class timer (shown on the hub and on every iPad) ---- */
@@ -1273,7 +1418,7 @@ function createTile(s){
   t.innerHTML=`
     <div class="tile-head">
       <span class="dot"></span><span class="tile-name"></span>
-      <span class="rec-badge hidden">● REC</span>
+      <span class="lock-badge hidden">🔒 LOCKED</span><span class="rec-badge hidden">● REC</span>
       <button class="kebab" aria-label="Screen options" aria-haspopup="true">⋮</button>
     </div>
     <div class="tile-body"><canvas width="${W}" height="${H}"></canvas><div class="offline-badge">Disconnected</div></div>`;
@@ -1282,6 +1427,7 @@ function createTile(s){
   if(T.bg) setBg(s.board,T.bg);
   if(T.grid&&T.grid.on) setGrid(s.board,T.grid);
   t.querySelector('.tile-name').textContent=s.name;
+  if(s.locked){ t.classList.add('locked'); t.querySelector('.lock-badge').classList.remove('hidden'); }
   t.querySelector('.kebab').onclick = e => { e.stopPropagation(); openMenu(s); };
 }
 
@@ -1293,6 +1439,7 @@ function openMenu(s){
   const items=[
     [isMax?'Restore screen':'Maximise screen', () => toggleMax(s.cid)],
     ['Message screen…', () => messageDialog(s)],
+    [s.locked?'Unlock screen':'Lock screen', () => setLocked(s,!s.locked)],
     [s.rec?'Stop recording':'Screen record', () => s.rec ? stopRecording(s) : startRecording(s)],
     ...(s.tItems.length ? [['Remove my drawings', () => removeTeacherDrawings(s)]] : []),
     null,
@@ -1427,7 +1574,7 @@ function initStudent(code){
   /* whiteboard state */
   const canvas=$('sc'); canvas.width=W; canvas.height=H;
   const board=makeBoard(canvas);
-  const S={ items:[], tItems:[], kicked:false, joined:false, name:'', peer:null, conn:null, photo:null, teacherBg:null };
+  const S={ locked:false, items:[], tItems:[], kicked:false, joined:false, name:'', peer:null, conn:null, photo:null, teacherBg:null };
   const E={ tool:'pen', color:COLORS[0], size:6, fill:false };
   const send=o=>{ try{ if(S.conn && S.conn.open) S.conn.send(o); }catch(e){} };
   const view=makeView($('stage'),canvas);
@@ -1436,14 +1583,15 @@ function initStudent(code){
   buildToolbar($('tb'),E,view,{
     undo:()=>editor.undo(),
     clearLabel:'Clear',
-    clear:()=>{ if(!S.items.length) return; if(!confirm('Clear your whiteboard?')) return; editor.clearAll(); },
+    clear:()=>{ if(S.locked || !S.items.length) return; if(!confirm('Clear your whiteboard?')) return; if(S.locked) return; editor.clearAll(); },
     mathTools:()=>toggleMathTray(editor,$('student')),
     photo:()=>$('photo-in').click(),
-    removePhoto:()=>{ S.photo=null; setBg(board,S.teacherBg); send({t:'sbg',data:null}); view.photoUI(false); toast('Photo removed'); }
+    removePhoto:()=>{ if(S.locked) return; S.photo=null; setBg(board,S.teacherBg); send({t:'sbg',data:null}); view.photoUI(false); toast('Photo removed'); }
   });
   $('photo-in').onchange=e=>{
-    const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    const f=e.target.files[0]; e.target.value=''; if(!f || S.locked) return;
     fileToData(f,1800,1300000,data=>{
+      if(S.locked) return;
       S.photo=data; setBg(board,data); send({t:'sbg',data}); view.photoUI(true);
       toast('Photo added. Draw on it, and use zoom to look closely.',3500);
     });
@@ -1452,6 +1600,71 @@ function initStudent(code){
   document.addEventListener('touchmove',e=>{ if(e.target===canvas) e.preventDefault(); },{passive:false});
   const fit=()=>view.fit();
   new ResizeObserver(fit).observe($('stage')); window.addEventListener('resize',fit);
+
+  /* focus mode: hide the toolbar and/or go full screen so the board gets the whole display */
+  const tbEl=document.querySelector('#student .toolbar'), fsEl=document.documentElement;
+  const fsOk=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  function setToolbar(hidden){
+    tbEl.classList.toggle('hidden',hidden); $('tb-float').classList.toggle('hidden',!hidden);
+    $('btn-hide-tb').textContent='▲ Hide toolbar';
+  }
+  function toggleFs(){
+    try{
+      if(isFs()) (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      else (fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl);
+    }catch(e){ toast('Full screen isn’t available here. Try Share → Add to Home Screen.',4000); }
+  }
+  function fsLabel(){ const t=isFs()?'✕ Exit full screen':'⛶ Full screen'; $('btn-fs').textContent=t; $('fl-fs').textContent=isFs()?'✕':'⛶'; }
+  if(fsOk){ $('btn-fs').classList.remove('hidden'); $('fl-fs').classList.remove('hidden'); }
+  $('btn-hide-tb').onclick=()=>setToolbar(true);
+  $('fl-show').onclick=()=>setToolbar(false);
+  $('btn-fs').onclick=$('fl-fs').onclick=toggleFs;
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{ fsLabel(); view.fit(); }));
+
+  /* screenshot: saves exactly what the student is looking at (current zoom and pan) as a PNG */
+  function shotCanvas(){
+    const vp=$('stage'), vw=vp.clientWidth, vh=vp.clientHeight, z=view.z, k=W/view.bw;
+    const x0=Math.max(0,-view.px/z), y0=Math.max(0,-view.py/z);
+    const x1=Math.min(view.bw,(vw-view.px)/z), y1=Math.min(view.bh,(vh-view.py)/z);
+    const out=document.createElement('canvas');
+    out.width=Math.max(1,Math.round((x1-x0)*k)); out.height=Math.max(1,Math.round((y1-y0)*k));
+    const c=out.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,out.width,out.height);
+    c.drawImage(canvas,x0*k,y0*k,(x1-x0)*k,(y1-y0)*k,0,0,out.width,out.height);
+    return out;
+  }
+  async function shareShot(file){
+    if(!(navigator.canShare && navigator.canShare({files:[file]}))) return false;
+    try{ await navigator.share({files:[file]}); return true; }
+    catch(e){ return e && e.name==='AbortError'; }          // cancelled the share sheet counts as handled
+  }
+  function takeShot(){
+    if(S.locked) return;
+    shotCanvas().toBlob(async blob=>{
+      if(!blob){ toast('Couldn’t make the screenshot. Try again.'); return; }
+      const t=new Date(), stamp=String(t.getHours()).padStart(2,'0')+String(t.getMinutes()).padStart(2,'0');
+      const file=new File([blob],'whiteboard-'+stamp+'.png',{type:'image/png'});
+      if(await shareShot(file)) return;                      // iPad: share sheet → Save Image puts it in Photos
+      const url=URL.createObjectURL(blob);
+      const m=document.createElement('div'); m.className='modal';
+      m.innerHTML='<div class="modal-card"><h3>Your screenshot</h3><img class="bg-prev" alt="Screenshot of your whiteboard"><p style="color:var(--chalk-dim);margin:10px 0 0">Press and hold the picture, then tap <strong>Add to Photos</strong> (or <strong>Save to Photos</strong>).</p><div class="row"><a class="btn" download="'+file.name+'">Download</a><button class="btn ghost" data-a="c">Close</button></div></div>';
+      m.querySelector('img').src=url; m.querySelector('a').href=url;
+      const close=()=>{ m.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); };
+      m.querySelector('[data-a=c]').onclick=close; m.onclick=e=>{ if(e.target===m) close(); };
+      document.body.appendChild(m);
+    },'image/png');
+  }
+  $('btn-shot').onclick=$('fl-shot').onclick=takeShot;
+
+  /* screen lock set by the teacher */
+  function setLocked(on){
+    on=!!on; if(S.locked===on) return;
+    S.locked=on; editor.setLocked(on);
+    if(on){ closeMathTray(); document.querySelectorAll('.modal').forEach(m=>m.remove()); }
+    $('lock-overlay').classList.toggle('hidden',!on);
+    tbEl.inert=on; $('tb-float').inert=on;
+    if(!on) toast('🔓 Your teacher unlocked your screen');
+  }
 
   /* class timer set by the teacher */
   const TM={ state:'off', remaining:0, endPerf:0 }, pill=$('timer-pill');
@@ -1513,7 +1726,7 @@ function initStudent(code){
   }
 
   /* connection */
-  function setStatus(txt,bad){ $('status-text').textContent=txt; $('status').classList.toggle('bad',!!bad); }
+  function setStatus(txt,bad){ $('status-text').textContent=txt; $('status').classList.toggle('bad',!!bad); $('tb-float').classList.toggle('bad',!!bad); }
   let attemptTimer=null;
   function connect(){
     if(S.kicked) return;
@@ -1533,6 +1746,8 @@ function initStudent(code){
       conn.on('data',d=>{
         if(!d) return;
         if(d.t==='msg') showMsg(String(d.text||'').slice(0,400));
+        else if(d.t==='lobby'){ $('wait-overlay').classList.toggle('hidden', d.on!==true); }
+        else if(d.t==='lock'){ setLocked(d.on===true); }
         else if(d.t==='tab'){ addRef(d.data); }
         else if(d.t==='grid'){ setGrid(board,d.cfg); }
         else if(d.t==='timer'){
