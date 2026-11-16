@@ -504,32 +504,84 @@ function cleanGrid(c){
   if(!c || typeof c!=='object') return null;
   return { on:!!c.on, type:['square','lines','dots'].includes(c.type)?c.type:'square',
     size:Math.min(200,Math.max(12,+c.size||40)), alpha:Math.min(1,Math.max(.05,+c.alpha||.35)),
-    major:[0,5,10].includes(+c.major)?+c.major:0, color:/^#[0-9a-f]{6}$/i.test(c.color)?c.color:'#3b82f6' };
+    major:[0,5,10].includes(+c.major)?+c.major:0, color:/^#[0-9a-f]{6}$/i.test(c.color)?c.color:'#3b82f6',
+    axes:['full','quarter'].includes(c.axes)?c.axes:'none' };
+}
+/* Where grid line 0 sits. Ordinary grids start at the top-left corner. Coordinate graphs put (0,0) on a grid crossing:
+   'full' = middle of the board (all four quadrants), 'quarter' = bottom-left with a margin for the number labels. */
+function gridOrigin(g){
+  const u=g.size;
+  if(g.axes==='full') return {x:Math.round(W/2/u)*u, y:Math.round(H/2/u)*u};
+  if(g.axes==='quarter') return {x:Math.max(2,Math.ceil(70/u))*u, y:Math.floor((H-70)/u)*u};
+  return {x:0,y:0};
+}
+/* nearest grid crossing, used by the students' "Snap to grid" button */
+function snapPt(g,p){
+  const o=gridOrigin(g), u=g.size;
+  return [o.x+Math.round((p[0]-o.x)/u)*u, o.y+Math.round((p[1]-o.y)/u)*u];
 }
 const _gridCache={};
 function gridCanvas(g){
-  const key=[g.type,g.size,g.color,g.alpha,g.major].join('|');
+  const key=[g.type,g.size,g.color,g.alpha,g.major,g.axes].join('|');
   if(_gridCache.key===key) return _gridCache.c;
   const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
   x.strokeStyle=g.color; x.fillStyle=g.color; x.lineCap='butt';
+  const u=g.size, o=gridOrigin(g), coord=g.axes!=='none';
+  if(coord){ drawCoordGrid(x,g,o); _gridCache.key=key; _gridCache.c=c; return c; }
   if(g.type==='dots'){
     x.globalAlpha=Math.min(1,g.alpha+.3);
-    for(let i=0;i*g.size<=W;i++) for(let j=0;j*g.size<=H;j++){
+    for(let i=0;i*u<=W;i++) for(let j=0;j*u<=H;j++){
       const big=g.major && i%g.major===0 && j%g.major===0;
-      x.beginPath(); x.arc(i*g.size,j*g.size,big?5:3,0,Math.PI*2); x.fill();
+      x.beginPath(); x.arc(i*u,j*u,big?5:3,0,Math.PI*2); x.fill();
     }
   } else {
     for(const major of [false,true]){
       if(major && !g.major) continue;
       x.beginPath();
-      if(g.type==='square') for(let i=0;i*g.size<=W;i++){ if((g.major&&i%g.major===0)===major){ x.moveTo(i*g.size+.5,0); x.lineTo(i*g.size+.5,H); } }
-      for(let j=0;j*g.size<=H;j++){ if((g.major&&j%g.major===0)===major){ x.moveTo(0,j*g.size+.5); x.lineTo(W,j*g.size+.5); } }
+      if(g.type==='square') for(let i=0;i*u<=W;i++){ if((g.major&&i%g.major===0)===major){ x.moveTo(i*u+.5,0); x.lineTo(i*u+.5,H); } }
+      for(let j=0;j*u<=H;j++){ if((g.major&&j%g.major===0)===major){ x.moveTo(0,j*u+.5); x.lineTo(W,j*u+.5); } }
       x.lineWidth=major?3:1.6; x.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; x.stroke();
     }
   }
   _gridCache.key=key; _gridCache.c=c; return c;
 }
-function setGrid(b,cfg){ const g=cleanGrid(cfg); b.grid=g&&g.on?g:null; render(b); }
+/* Coordinate graph: a square grid with labelled x/y axes on top. 'full' shows negatives too; 'quarter' is positives only. */
+function drawCoordGrid(x,g,o){
+  const u=g.size, full=g.axes==='full';
+  const xMin=full?0:o.x, yMax=full?H:o.y;            // quarter graph: grid only in the top-right quadrant
+  const nxL=full?Math.floor(o.x/u):0, nxR=Math.floor((W-o.x)/u);
+  const nyU=Math.floor(o.y/u), nyD=full?Math.floor((H-o.y)/u):0;
+  const left=o.x-nxL*u, right=o.x+nxR*u, top=o.y-nyU*u, bottom=o.y+nyD*u;
+  // grid squares (darker every 5 or 10 counted from the origin)
+  for(const major of [false,true]){
+    if(major && !g.major) continue;
+    x.beginPath();
+    for(let i=-nxL;i<=nxR;i++){ if(((g.major&&i%g.major===0))===major){ const px=o.x+i*u+.5; x.moveTo(px,top); x.lineTo(px,bottom); } }
+    for(let j=-nyU;j<=nyD;j++){ if(((g.major&&j%g.major===0))===major){ const py=o.y+j*u+.5; x.moveTo(left,py); x.lineTo(right,py); } }
+    x.lineWidth=major?3:1.6; x.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; x.stroke();
+  }
+  // axes
+  const ink='#111111', ah=14;
+  x.globalAlpha=1; x.strokeStyle=ink; x.fillStyle=ink; x.lineWidth=4; x.lineCap='round';
+  x.beginPath(); x.moveTo(left,o.y); x.lineTo(right,o.y); x.moveTo(o.x,top); x.lineTo(o.x,bottom); x.stroke();
+  const arrow=(px,py,dx,dy)=>{ x.beginPath(); x.moveTo(px,py); x.lineTo(px-dx*ah-dy*ah*.55,py-dy*ah+dx*ah*.55); x.lineTo(px-dx*ah+dy*ah*.55,py-dy*ah-dx*ah*.55); x.closePath(); x.fill(); };
+  arrow(right,o.y,1,0); arrow(o.x,top,0,-1);
+  if(full){ arrow(left,o.y,-1,0); arrow(o.x,bottom,0,1); }
+  // numbers
+  const step=u>=36?1:u>=22?2:5, fs=Math.round(Math.min(26,Math.max(15,u*.5)));
+  x.font='600 '+fs+'px Arial, Helvetica, sans-serif'; x.globalAlpha=.9;
+  const label=(t,px,py)=>{ x.strokeStyle='#ffffff'; x.lineWidth=5; x.lineJoin='round'; x.globalAlpha=.85; x.strokeText(t,px,py); x.globalAlpha=.9; x.fillText(t,px,py); };
+  x.textAlign='center'; x.textBaseline='top';
+  for(let i=-nxL;i<=nxR;i++){ if(i===0||i%step) continue; if(o.x+i*u>W-ah*2||o.x+i*u<ah*2) continue; label(String(i),o.x+i*u,o.y+8); }
+  x.textAlign='right'; x.textBaseline='middle';
+  for(let j=-nyU;j<=nyD;j++){ const v=-j, py=o.y+j*u; if(v===0||v%step) continue; if(py<ah*2||py>H-ah*2) continue; label(String(v),o.x-10,py); }
+  x.textAlign='right'; x.textBaseline='top'; label('0',o.x-10,o.y+8);
+  // axis names
+  x.font='italic 700 '+(fs+4)+'px Georgia, "Times New Roman", serif'; x.globalAlpha=1;
+  x.textAlign='left'; x.textBaseline='middle'; x.fillText('x',Math.min(right+ah*.4,W-fs),o.y-fs*.9);
+  x.textAlign='center'; x.textBaseline='bottom'; x.fillText('y',o.x+fs*.9,Math.max(top-ah*.3,fs+6));
+}
+function setGrid(b,cfg){ const g=cleanGrid(cfg); b.grid=g&&g.on?g:null; render(b); if(b.onGrid) b.onGrid(!!b.grid); }
 
 /* A board = visible canvas + a student ink layer ('s') + a teacher ink layer ('t')
    + optional background picture. Separate layers mean the eraser only removes its
@@ -746,6 +798,7 @@ function createEditor(o){
   let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null, locked=false;
   const items=()=>o.getItems();
   const pos=e=>{ const r=canvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; };
+  const P=(e,noSnap)=>{ const p=pos(e); return (E.snap && board.grid && !noSnap && E.tool!=='eraser') ? snapPt(board.grid,p) : p; };   // grid-snapped position
   const vpPt=(x,y)=>{ const r=vp.getBoundingClientRect(); return [x-r.left,y-r.top]; };
   function flush(){ clearTimeout(pendT); pendT=null; if(pend.length && cur) o.send({t:'pts',id:cur.id,pts:pend}); pend=[]; }
   function abortStroke(){
@@ -812,7 +865,7 @@ function createEditor(o){
       return;
     }
     if(selId||board.sel){ selId=null; board.sel=null; }
-    const [x,y]=pos(e), isPen=E.tool==='pen'||E.tool==='eraser';
+    const [x,y]=P(e), isPen=E.tool==='pen'||E.tool==='eraser';
     const it={ id:rid(10), kind:isPen?'pen':E.tool, color:E.color, eraser:E.tool==='eraser',
                size:E.tool==='eraser'?Math.max(E.size*3,24):E.size, fill:E.fill };
     if(isPen) it.pts=[[x,y]]; else { it.x1=x; it.y1=y; it.x2=x; it.y2=y; }
@@ -850,13 +903,14 @@ function createEditor(o){
         const L=layerOf(board,key,true);
         const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
         for(const ev of (evs.length?evs:[e])){
-          const pt=pos(ev).map(v=>Math.round(v*10)/10), from=cur.pts.length;
+          const pt=P(ev).map(v=>Math.round(v*10)/10), from=cur.pts.length, lp=cur.pts[from-1];
+          if(E.snap && board.grid && lp && lp[0]===pt[0] && lp[1]===pt[1]) continue;   // still on the same grid point
           cur.pts.push(pt); drawPenTail(L.ctx,cur,from); pend.push(pt);
         }
         render(board);
         if(!pendT) pendT=setTimeout(flush,30);
       } else {
-        [cur.x2,cur.y2]=pos(e); rebuild(board,key,items());
+        [cur.x2,cur.y2]=P(e); rebuild(board,key,items());
         const now=performance.now(); if(now-lastSet>40){ lastSet=now; o.send({t:'set',item:cur}); }
       }
     }
@@ -876,7 +930,7 @@ function createEditor(o){
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),sg);
   canvas.addEventListener('click',e=>{
     if(locked || E.tool!=='text') return;
-    const [x,y]=pos(e);
+    const [x,y]=P(e);
     askText(text=>{
       const it={ id:rid(10), kind:'text', color:E.color, size:20+E.size*3, x1:x, y1:y, text };
       items().push(it); drawLive(board,key,it); o.send({t:'set',item:it});
@@ -925,6 +979,11 @@ function buildToolbar(host,E,view,o){
   btn(g3,'🧮 Math tools','tool math',()=>{ if(o.mathTools) o.mathTools(); });
   if(o.photo){ btn(g3,'📷 Photo','tool',o.photo); const rm=btn(g3,'Remove photo','tool sm hidden',o.removePhoto); view.photoUI=has=>rm.classList.toggle('hidden',!has); }
   const fillB=btn(g3,'Fill shapes','tool sm',()=>{ E.fill=!E.fill; refresh(); });
+  if(o.snapUI){
+    const snapB=btn(g3,'','tool sm hidden',()=>{ E.snap=!E.snap; refresh(); });
+    snapB.id='btn-snap'; view.gridUI=on=>{ snapB.classList.toggle('hidden',!on); };
+    view.snapB=snapB;
+  }
   btn(g3,'Undo','tool sm',o.undo); btn(g3,o.clearLabel,'tool sm',o.clear);
   const g4=grp('Zoom');
   btn(g4,'−','tool sm',()=>view.zoomBy(1/1.4)).setAttribute('aria-label','Zoom out');
@@ -937,6 +996,7 @@ function buildToolbar(host,E,view,o){
     tb.forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===E.tool));
     sw.forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===E.color));
     fillB.setAttribute('aria-pressed',E.fill);
+    if(view.snapB){ view.snapB.setAttribute('aria-pressed',!!E.snap); view.snapB.textContent=(E.snap?'☑':'☐')+' 🧲 Snap to grid'; }
   }
   refresh();
 }
@@ -1272,11 +1332,12 @@ function applyGrid(cfg){
 }
 function gridPanel(){
   const old=document.getElementById('gp'); if(old){ old.remove(); return; }
-  const g=T.grid||{on:true,type:'square',size:40,color:'#3b82f6',alpha:.35,major:5};
+  const g=T.grid||{on:true,type:'square',size:40,color:'#3b82f6',alpha:.35,major:5,axes:'none'}; if(!g.axes) g.axes='none';
   const p=document.createElement('div'); p.id='gp'; p.className='gp';
   p.innerHTML=`<h3>Maths book grid <button class="btn ghost" data-a="x" style="padding:4px 10px" aria-label="Close">✕</button></h3>
     <div class="seg" id="g-on"><button data-v="1">On</button><button data-v="0">Off</button></div>
     <label>Style</label><div class="seg" id="g-type"><button data-v="square">Squares</button><button data-v="lines">Lines</button><button data-v="dots">Dots</button></div>
+    <label>Coordinate graph (with axes and numbers)</label><div class="seg" id="g-axes"><button data-v="none">None</button><button data-v="full">Full (±)</button><button data-v="quarter">Quarter (+)</button></div>
     <label>Size</label><input type="range" id="g-size" min="16" max="160">
     <label>Colour</label><div class="sws" id="g-col"></div>
     <label>Line strength</label><input type="range" id="g-alpha" min="10" max="90">
@@ -1289,12 +1350,15 @@ function gridPanel(){
     p.querySelectorAll('#g-on button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.v==='1')===g.on));
     p.querySelectorAll('#g-type button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===g.type));
     p.querySelectorAll('#g-major button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===g.major));
+    p.querySelectorAll('#g-axes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===g.axes));
+    p.querySelector('#g-type').style.opacity=g.axes==='none'?1:.4;
     p.querySelectorAll('#g-col button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===g.color));
     p.querySelector('#g-size').value=g.size; p.querySelector('#g-alpha').value=Math.round(g.alpha*100);
   };
   const push=()=>{ refresh(); applyGrid(g); };
   p.querySelectorAll('#g-on button').forEach(b=>b.onclick=()=>{ g.on=b.dataset.v==='1'; push(); });
   p.querySelectorAll('#g-type button').forEach(b=>b.onclick=()=>{ g.type=b.dataset.v; g.on=true; push(); });
+  p.querySelectorAll('#g-axes button').forEach(b=>b.onclick=()=>{ g.axes=b.dataset.v; g.on=true; if(g.axes!=='none'&&g.type!=='square') g.type='square'; push(); });
   p.querySelectorAll('#g-major button').forEach(b=>b.onclick=()=>{ g.major=+b.dataset.v; g.on=true; push(); });
   p.querySelectorAll('#g-col button').forEach(b=>b.onclick=()=>{ g.color=b.dataset.v; g.on=true; push(); });
   p.querySelector('#g-size').oninput=e=>{ g.size=+e.target.value; g.on=true; push(); };
@@ -1583,6 +1647,7 @@ function initStudent(code){
   const editor=createEditor({ canvas, vp:$('stage'), board, key:'s', view, E,
     getItems:()=>S.items, setItems:a=>{ S.items=a; }, send });
   buildToolbar($('tb'),E,view,{
+    snapUI:true,
     undo:()=>editor.undo(),
     clearLabel:'Clear',
     clear:()=>{ if(S.locked || !S.items.length) return; if(!confirm('Clear your whiteboard?')) return; if(S.locked) return; editor.clearAll(); },
@@ -1590,6 +1655,7 @@ function initStudent(code){
     photo:()=>$('photo-in').click(),
     removePhoto:()=>{ if(S.locked) return; S.photo=null; setBg(board,S.teacherBg); send({t:'sbg',data:null}); view.photoUI(false); toast('Photo removed'); }
   });
+  board.onGrid=on=>{ if(view.gridUI) view.gridUI(on); };   // show the Snap button only while a grid is on
   $('photo-in').onchange=e=>{
     const f=e.target.files[0]; e.target.value=''; if(!f || S.locked) return;
     fileToData(f,1800,1300000,data=>{
