@@ -58,3 +58,14 @@ Multi-page PDF worksheets, portrait-shaped boards, message all students, save a 
 - **Edit:** double-click (or double-tap) any text on the board to change it. With the **Aa Text** tool a single click on existing text edits it.
 - **Resize:** with **↖ Move**, tap text to select it, then drag the blue corner handle to make it bigger or smaller. Drag the text itself to move it.
 - In the text box, **Enter** starts a new line; press the **Add text / Save** button to finish.
+
+## Unlimited canvas (per student)
+
+Each student has an **∞ Unlimited canvas** tickbox in their toolbar. Unticked is the normal fixed page.
+
+- **Ticked:** the canvas has no edges. Drag with two fingers (or the ✋ Pan tool, or scroll / trackpad) to move around, pinch or ctrl+scroll to zoom, and keep drawing anywhere. **Fit all** zooms to show everything they have drawn.
+- **Switching back:** work outside the page is hidden (not deleted) in Page mode, and the student is warned first. Ticking again brings it back.
+- **Teacher:** the student's tile in the gallery shows the part of the canvas they are working on (with an ∞ badge). Maximising a tile opens on that same spot and follows the student as they move. If the teacher drags or zooms, they stop following and can look around freely; **⟲ Follow student** snaps back. Teacher drawings use the same coordinates, so the student sees them in the right place.
+- **Worksheets / Frenzy:** a teacher background sits where the page is (with a thin outline). Frenzy marking reads the student's writing in page coordinates, so it works the same for both modes.
+- **Under the hood:** marks are stored in unbounded "world" coordinates; a camera (`board.cam`) decides what is drawn. Students send `{t:'mode'}` and `{t:'cam'}` messages; page-mode students are unchanged.
+

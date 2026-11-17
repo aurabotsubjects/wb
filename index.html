@@ -207,6 +207,11 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
 .fz-main canvas{display:block;width:100%;background:#fff;border-radius:10px;cursor:pointer}
 .fz-hint{color:var(--chalk-dim);margin:8px 0 0;font-size:.9rem}
 @media(max-width:820px){.fz-body{flex-direction:column}.fz-list{width:auto;flex-direction:row;overflow:auto}.fz-item{flex:none}}
+/* ---------- unlimited canvas ---------- */
+#sc.inf,.tile.max .tile-body canvas.inf{box-shadow:none}
+.tool.chk{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.tool.chk input{width:20px;height:20px;margin:0;accent-color:var(--ink);cursor:pointer}
+.inf-badge{color:var(--ink);background:var(--chalk);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
 </style>
 </head>
 <body>
@@ -479,16 +484,24 @@ function hitMath(it,x,y,tol){
 }
 function selOf(it){ const d=mathDims(it), sc=it.sc||1; return { math:true, cx:it.x, cy:it.y, rot:it.rot||0, w:d.w*sc, h:d.h*sc }; }
 function selFor(it){ if(it.kind==='math') return selOf(it); const b=bboxOf(it); return it.kind==='text'?{text:true,x:b.x,y:b.y,w:b.w,h:b.h}:b; }
-function hitTextHandle(it,x,y){ const b=textBox(it); return Math.hypot(x-(b.x+b.w),y-(b.y+b.h))<=44; }
-function hitHandle(it,x,y){
+function hitTextHandle(it,x,y,hs=1){ const b=textBox(it); return Math.hypot(x-(b.x+b.w),y-(b.y+b.h))<=44*hs; }
+function hitHandle(it,x,y,hs=1){
   const sl=selOf(it), r=sl.rot, dx=x-sl.cx, dy=y-sl.cy, c=Math.cos(-r), s=Math.sin(-r);
-  const lx=dx*c-dy*s, ly=dx*s+dy*c, T=44;
+  const lx=dx*c-dy*s, ly=dx*s+dy*c, T=44*hs;
   if(Math.hypot(lx-sl.w/2,ly+sl.h/2)<=T) return 'del';
-  if(Math.hypot(lx,ly+sl.h/2+60)<=T) return 'rot';
+  if(Math.hypot(lx,ly+sl.h/2+60*hs)<=T) return 'rot';
   if(Math.hypot(lx-sl.w/2,ly-sl.h/2)<=T) return 'size';
   return null;
 }
-function drawSelection(c,sel){
+/* hs = how much to enlarge the handles so they stay the same size on screen when the unlimited canvas is zoomed */
+function drawSelection(c,sel,hs){
+  hs=hs||1; if(hs===1){ drawSelectionBase(c,sel); return; }
+  c.save();
+  if(sel.math){ c.translate(sel.cx,sel.cy); c.rotate(sel.rot); c.scale(hs,hs); drawSelectionBase(c,{math:true,cx:0,cy:0,rot:0,w:sel.w/hs,h:sel.h/hs}); }
+  else { c.translate(sel.x,sel.y); c.scale(hs,hs); drawSelectionBase(c,{text:sel.text,x:0,y:0,w:sel.w/hs,h:sel.h/hs}); }
+  c.restore();
+}
+function drawSelectionBase(c,sel){
   c.save(); c.strokeStyle='#3b82f6'; c.lineWidth=4;
   const knob=(x,y,col,icon)=>{
     c.save(); c.translate(x,y); c.fillStyle=col; c.strokeStyle='#fff'; c.lineWidth=4;
@@ -606,18 +619,128 @@ function setGrid(b,cfg){ const g=cleanGrid(cfg); b.grid=g&&g.on?g:null; render(b
 ['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,function unlock(){
   try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; const a=beep.ctx||(beep.ctx=new AC()); if(a.state==='suspended') a.resume(); }catch(e){}
 },{passive:true}));
-function makeBoard(canvas){ const b={canvas,ctx:canvas.getContext('2d'),layers:{s:null,t:null,sm:null,tm:null},bg:null,grid:null,token:0}; render(b); return b; }
+/* A board normally shows the fixed 1600x1200 page (b.cam === null).
+   With the unlimited canvas on, b.cam = {x,y,z} is a camera over an endless "world": marks keep world coordinates,
+   z = canvas pixels per world unit, and b.cw/b.ch is the size of the canvas that shows the world. */
+function makeBoard(canvas){
+  const b={canvas,ctx:canvas.getContext('2d'),layers:{s:null,t:null,sm:null,tm:null},bg:null,grid:null,token:0,
+           cam:null,cw:canvas.width||W,ch:canvas.height||H,getItems:null,_raf:0,_idle:0,layerCam:null,lastCost:0};
+  b.redrawNow=()=>{                                   // re-rasterise every layer for the current camera
+    if(b._raf){ cancelAnimationFrame(b._raf); b._raf=0; } clearTimeout(b._idle);
+    const t0=performance.now();
+    if(b.getItems){ paintKey(b,'s',b.getItems('s')||[]); paintKey(b,'t',b.getItems('t')||[]); }
+    b.layerCam=b.cam?{x:b.cam.x,y:b.cam.y,z:b.cam.z}:null;
+    b.lastCost=performance.now()-t0;
+    render(b);
+  };
+  /* Camera moved. Small drawings: redraw sharply every frame. Big drawings (slow to redraw): slide/scale the picture we already
+     have right now, and redraw it sharp once the movement settles. */
+  b.requestRedraw=()=>{
+    if(b._raf) return;
+    b._raf=requestAnimationFrame(()=>{
+      b._raf=0;
+      if(b.lastCost>16 && b.layerCam && b.cam){ render(b); clearTimeout(b._idle); b._idle=setTimeout(()=>b.redrawNow(),110); }
+      else b.redrawNow();
+    });
+  };
+  render(b); return b;
+}
 function layerOf(b,key,create){
-  if(!b.layers[key] && create){ const c=document.createElement('canvas'); c.width=W; c.height=H; b.layers[key]={c,ctx:c.getContext('2d')}; }
+  if(!b.layers[key] && create){ const c=document.createElement('canvas'); c.width=b.cw; c.height=b.ch; b.layers[key]={c,ctx:c.getContext('2d')}; }
   return b.layers[key];
 }
 function render(b){
-  const c=b.ctx; c.fillStyle='#fff'; c.fillRect(0,0,W,H);
-  if(b.bg){ const k=Math.min(W/b.bg.width,H/b.bg.height), w=b.bg.width*k, h=b.bg.height*k; c.drawImage(b.bg,(W-w)/2,(H-h)/2,w,h); }
-  if(b.grid) c.drawImage(gridCanvas(b.grid),0,0);
+  const c=b.ctx; c.setTransform(1,0,0,1,0,0); c.fillStyle='#fff'; c.fillRect(0,0,b.cw,b.ch);
+  if(b.cam) renderInfBase(b);
+  else {
+    if(b.bg){ const k=Math.min(W/b.bg.width,H/b.bg.height), w=b.bg.width*k, h=b.bg.height*k; c.drawImage(b.bg,(W-w)/2,(H-h)/2,w,h); }
+    if(b.grid) c.drawImage(gridCanvas(b.grid),0,0);
+  }
+  const lc=b.layerCam, cm0=b.cam, moved=!!(cm0 && lc && !sameCam(cm0,lc));
+  if(moved){ const f=cm0.z/lc.z; c.save(); c.setTransform(f,0,0,f,(lc.x-cm0.x)*cm0.z,(lc.y-cm0.y)*cm0.z); }
   for(const k of ['s','sm','t','tm']) if(b.layers[k]) c.drawImage(b.layers[k].c,0,0);
-  if(b.sel) drawSelection(c,b.sel);
+  if(moved) c.restore();
+  if(b.sel){
+    if(b.cam){ const cm=b.cam; c.save(); c.setTransform(cm.z,0,0,cm.z,-cm.x*cm.z,-cm.y*cm.z); drawSelection(c,b.sel,Math.min(b.cw/W,b.ch/H)/cm.z); c.restore(); }
+    else drawSelection(c,b.sel);
+  }
 }
+
+/* ---------- unlimited canvas helpers ---------- */
+/* what a camera view looks like in messages: centre point + how much of the world is visible */
+function camContain(c,cw,ch){ const z=Math.min(cw/c.vw,ch/c.vh); return { z, x:c.cx-cw/(2*z), y:c.cy-ch/(2*z) }; }
+function cleanCam(d){
+  const n=(v,lo,hi)=>{ v=+v; return Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):0; };
+  return { cx:n(d.cx,-1e7,1e7), cy:n(d.cy,-1e7,1e7), vw:Math.max(20,n(d.vw,20,1e7)), vh:Math.max(20,n(d.vh,20,1e7)) };
+}
+function renderInfBase(b){
+  const c=b.ctx, cm=b.cam; c.save(); c.setTransform(cm.z,0,0,cm.z,-cm.x*cm.z,-cm.y*cm.z);
+  if(b.bg){                                           // the teacher's picture / worksheet sits where the page is, with an outline
+    const k=Math.min(W/b.bg.width,H/b.bg.height), w=b.bg.width*k, h=b.bg.height*k;
+    c.drawImage(b.bg,(W-w)/2,(H-h)/2,w,h);
+    c.strokeStyle='rgba(0,0,0,.28)'; c.lineWidth=Math.max(2,1.5/cm.z); c.strokeRect(0,0,W,H);
+  }
+  if(b.grid) drawInfGrid(c,b);
+  c.restore();
+}
+function drawInfGrid(c,b){                            // the maths-book grid carries on forever
+  const g=b.grid, cm=b.cam, z=cm.z;
+  if(g.axes!=='none'){ c.drawImage(gridCanvas(g),0,0); return; }      // coordinate graphs stay on the page
+  const x0=cm.x, y0=cm.y, x1=cm.x+b.cw/z, y1=cm.y+b.ch/z;
+  let u=g.size; while((x1-x0)/u>90 || (y1-y0)/u>90) u*=2;             // very zoomed out: use every 2nd, 4th... line
+  const mult=u/g.size, isMaj=i=>g.major && Math.round(i*mult)%g.major===0;
+  const i0=Math.floor(x0/u), i1=Math.ceil(x1/u), j0=Math.floor(y0/u), j1=Math.ceil(y1/u);
+  c.strokeStyle=g.color; c.fillStyle=g.color; c.lineCap='butt';
+  if(g.type==='dots'){
+    c.globalAlpha=Math.min(1,g.alpha+.3);
+    for(let i=i0;i<=i1;i++) for(let j=j0;j<=j1;j++){
+      const big=g.major && isMaj(i) && isMaj(j), r=Math.max(big?5:3,(big?2.2:1.4)/z);
+      c.beginPath(); c.arc(i*u,j*u,r,0,Math.PI*2); c.fill();
+    }
+  } else {
+    for(const major of [false,true]){
+      if(major && !g.major) continue;
+      c.beginPath();
+      if(g.type==='square') for(let i=i0;i<=i1;i++){ if(!!isMaj(i)===major){ c.moveTo(i*u,y0); c.lineTo(i*u,y1); } }
+      for(let j=j0;j<=j1;j++){ if(!!isMaj(j)===major){ c.moveTo(x0,j*u); c.lineTo(x1,j*u); } }
+      c.lineWidth=Math.max(major?3:1.6,(major?1.6:1)/z); c.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; c.stroke();
+    }
+  }
+  c.globalAlpha=1;
+}
+/* bounding box of any item, cached for pen strokes (their point arrays only ever grow or get replaced) */
+const _pb=new WeakMap();
+function itemBounds(it){
+  if(it.kind==='math'){ const d=mathDims(it), r=Math.hypot(d.w,d.h)/2*(it.sc||1); return { x:it.x-r, y:it.y-r, w:2*r, h:2*r }; }
+  if(it.kind==='pen' && it.pts){ const c=_pb.get(it.pts); if(c && c.n===it.pts.length) return c.b; const bb=bboxOf(it); _pb.set(it.pts,{n:it.pts.length,b:bb}); return bb; }
+  return bboxOf(it);
+}
+function contentBounds(items){
+  let x0=1e18,y0=1e18,x1=-1e18,y1=-1e18,n=0;
+  for(const it of items){
+    if(it.eraser) continue; const b=itemBounds(it); if(!isFinite(b.x+b.y+b.w+b.h)) continue;
+    n++; x0=Math.min(x0,b.x); y0=Math.min(y0,b.y); x1=Math.max(x1,b.x+b.w); y1=Math.max(y1,b.y+b.h);
+  }
+  return n ? {x:x0,y:y0,w:x1-x0,h:y1-y0} : null;
+}
+function sameCam(a,c){ return a.x===c.x && a.y===c.y && a.z===c.z; }
+function syncLayers(b){ if(b.cam && b.layerCam && !sameCam(b.cam,b.layerCam)) b.redrawNow(); }   // layers are showing an older view: catch up before drawing on them
+function camDo(b,ctx,fn){                             // run fn with the board's camera applied to ctx
+  if(!b.cam){ fn(); return; }
+  const cm=b.cam; ctx.save(); ctx.setTransform(cm.z,0,0,cm.z,-cm.x*cm.z,-cm.y*cm.z); fn(); ctx.restore();
+}
+function paintItems(b,ctx,items){
+  if(!b.cam){ for(const it of items) drawItem(ctx,it); return; }
+  const cm=b.cam, x0=cm.x, y0=cm.y, x1=cm.x+b.cw/cm.z, y1=cm.y+b.ch/cm.z;
+  camDo(b,ctx,()=>{ for(const it of items){ const bb=itemBounds(it); if(bb.x>x1||bb.y>y1||bb.x+bb.w<x0||bb.y+bb.h<y0) continue; drawItem(ctx,it); } });
+}
+/* the student's work laid out on the normal page (used for marking a Frenzy and its review picture) */
+function pageBoard(s){
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const b=makeBoard(c); b.bg=s.board.bg; b.grid=s.board.grid; b.getItems=k=>k==='s'?s.items:s.tItems; b.redrawNow(); return b;
+}
+function pageCanvasOf(s){ return s.inf ? pageBoard(s).canvas : s.canvas; }
+function inkLayerOf(s){ const b=s.inf?pageBoard(s):s.board; return b.layers.s?b.layers.s.c:null; }
 
 /* ---------- hit-testing / bounding boxes for the Move tool ---------- */
 const _mctx=document.createElement('canvas').getContext('2d');
@@ -668,16 +791,22 @@ function hitItem(it,x,y,tol){
   }
   return false;
 }
-function rebuild(b,key,items){
+function paintKey(b,key,items){
   const ink=items.filter(i=>i.kind!=='math'), mth=items.filter(i=>i.kind==='math');
   const L=layerOf(b,key,ink.length>0);
-  if(L){ L.ctx.clearRect(0,0,W,H); for(const it of ink) drawItem(L.ctx,it); }
+  if(L){ L.ctx.setTransform(1,0,0,1,0,0); L.ctx.clearRect(0,0,L.c.width,L.c.height); paintItems(b,L.ctx,ink); }
   const M=layerOf(b,key+'m',mth.length>0);
-  if(M){ M.ctx.clearRect(0,0,W,H); for(const it of mth) drawItem(M.ctx,it); }
-  render(b);
+  if(M){ M.ctx.setTransform(1,0,0,1,0,0); M.ctx.clearRect(0,0,M.c.width,M.c.height); paintItems(b,M.ctx,mth); }
 }
-function penTail(b,key,it,from){ drawPenTail(layerOf(b,key,true).ctx,it,from); render(b); }
-function drawLive(b,key,it){ drawItem(layerOf(b,key,true).ctx,it); render(b); }
+function rebuild(b,key,items,skipRender){
+  if(b.cam && b.layerCam && !sameCam(b.cam,b.layerCam) && b.getItems)           // the other layer is still showing an older view
+    for(const k of ['s','t']) if(k!==key) paintKey(b,k,b.getItems(k)||[]);
+  paintKey(b,key,items);
+  b.layerCam=b.cam?{x:b.cam.x,y:b.cam.y,z:b.cam.z}:null;
+  if(!skipRender) render(b);
+}
+function penTail(b,key,it,from){ syncLayers(b); const L=layerOf(b,key,true); camDo(b,L.ctx,()=>drawPenTail(L.ctx,it,from)); render(b); }
+function drawLive(b,key,it){ syncLayers(b); const L=layerOf(b,key,true); camDo(b,L.ctx,()=>drawItem(L.ctx,it)); render(b); }
 function setBg(b, dataUrl){
   const tk=++b.token;
   if(!dataUrl){ b.bg=null; render(b); return; }
@@ -707,23 +836,102 @@ function applyOps(board,key,items,type,d){
   return items;
 }
 
-/* ---------- zoom / pan view ---------- */
-function makeView(vp, canvas){
-  const v={z:1,px:0,py:0,bw:W,bh:H,onChange:null,MAX:5};
+/* ---------- zoom / pan view ----------
+   One object for both modes. Page mode = the 1600x1200 canvas is moved/scaled with CSS (as before).
+   Unlimited mode (v.inf) = the canvas fills the viewport and a camera (board.cam) decides which part of the endless world is drawn. */
+function makeView(vp, canvas, board){
+  const v={z:1,px:0,py:0,bw:W,bh:H,onChange:null,MAX:5,inf:false,k:1,z0:1,onUser:null,followUI:null,onMode:null};
+  const NULLS=()=>({s:null,t:null,sm:null,tm:null}), dpr=()=>Math.min(window.devicePixelRatio||1,2);
+  const zMin=()=>v.z0/25, zMax=()=>v.z0*6;
   v.clamp=()=>{
     const vw=vp.clientWidth, vh=vp.clientHeight, cw=v.bw*v.z, ch=v.bh*v.z;
     v.px = cw<=vw+0.5 ? (vw-cw)/2 : Math.min(0,Math.max(vw-cw,v.px));
     v.py = ch<=vh+0.5 ? (vh-ch)/2 : Math.min(0,Math.max(vh-ch,v.py));
   };
-  v.apply=()=>{ v.clamp(); canvas.style.transform='translate('+v.px+'px,'+v.py+'px) scale('+v.z+')'; if(v.onChange) v.onChange(v); };
+  v.hs=()=> (v.inf && board && board.cam) ? v.z0/board.cam.z : 1;
+  v.apply=user=>{                                     // user=true when a person (not a "follow") moved the view
+    if(v.inf){
+      const cm=board.cam; if(!cm) return;
+      cm.z=Math.min(zMax(),Math.max(zMin(),cm.z)); v.z=cm.z/v.z0;
+      board.requestRedraw();
+      if(user && v.onUser) v.onUser();
+      if(v.onChange) v.onChange(v);
+      return;
+    }
+    v.clamp(); canvas.style.transform='translate('+v.px+'px,'+v.py+'px) scale('+v.z+')'; if(v.onChange) v.onChange(v);
+  };
   v.fit=()=>{
     const vw=vp.clientWidth, vh=vp.clientHeight; if(!vw||!vh) return;
+    if(v.inf){
+      const k=dpr(), cw=Math.max(1,Math.round(vw*k)), ch=Math.max(1,Math.round(vh*k));
+      canvas.style.width=vw+'px'; canvas.style.height=vh+'px';
+      if(cw!==board.cw || ch!==board.ch || k!==v.k){   // window resized / iPad rotated: keep the same centre and relative zoom
+        const cm=board.cam, rel=cm.z/v.z0, cx=cm.x+board.cw/(2*cm.z), cy=cm.y+board.ch/(2*cm.z);
+        v.k=k; board.cw=cw; board.ch=ch; canvas.width=cw; canvas.height=ch; board.layers=NULLS();
+        v.z0=Math.min(cw/W,ch/H); cm.z=rel*v.z0; cm.x=cx-cw/(2*cm.z); cm.y=cy-ch/(2*cm.z);
+        board.redrawNow();
+      }
+      v.apply(); return;
+    }
     const k=Math.min(vw/W,vh/H); v.bw=W*k; v.bh=H*k;
     canvas.style.width=v.bw+'px'; canvas.style.height=v.bh+'px'; v.apply();
   };
-  v.zoomAt=(cx,cy,nz)=>{ nz=Math.min(v.MAX,Math.max(1,nz)); const r=nz/v.z; v.px=cx-(cx-v.px)*r; v.py=cy-(cy-v.py)*r; v.z=nz; v.apply(); };
-  v.zoomBy=f=>v.zoomAt(vp.clientWidth/2,vp.clientHeight/2,v.z*f);
-  v.reset=()=>{ v.z=1; v.apply(); };
+  v.zoomAt=(cx,cy,nz)=>{ nz=Math.min(v.MAX,Math.max(1,nz)); const r=nz/v.z; v.px=cx-(cx-v.px)*r; v.py=cy-(cy-v.py)*r; v.z=nz; v.apply(); };   // page mode
+  v.zoomFactorAt=(cx,cy,f)=>{
+    if(!v.inf){ v.zoomAt(cx,cy,v.z*f); return; }
+    const cm=board.cam, nz=Math.min(zMax(),Math.max(zMin(),cm.z*f)), wx=cm.x+cx*v.k/cm.z, wy=cm.y+cy*v.k/cm.z;
+    cm.z=nz; cm.x=wx-cx*v.k/nz; cm.y=wy-cy*v.k/nz; v.apply(true);
+  };
+  v.zoomBy=f=>v.zoomFactorAt(vp.clientWidth/2,vp.clientHeight/2,f);
+  v.reset=()=>{
+    if(!v.inf){ v.z=1; v.apply(); return; }
+    const bb=contentBounds([...(board.getItems('s')||[]),...(board.getItems('t')||[])]) || {x:0,y:0,w:W,h:H};   // "Fit all": show everything drawn
+    board.cam=camContain({cx:bb.x+bb.w/2,cy:bb.y+bb.h/2,vw:Math.max(bb.w,400)*1.15,vh:Math.max(bb.h,300)*1.15},board.cw,board.ch);
+    v.apply(true);
+  };
+  v.snap=()=> v.inf ? {x:board.cam.x,y:board.cam.y,z:board.cam.z} : {z:v.z,px:v.px,py:v.py};
+  v.pinch=(g,ratio,mx,my)=>{                          // two-finger pinch + drag
+    const s=g.sn;
+    if(v.inf){
+      const nz=Math.min(zMax(),Math.max(zMin(),s.z*ratio)), wx=s.x+g.mx*v.k/s.z, wy=s.y+g.my*v.k/s.z, cm=board.cam;
+      cm.z=nz; cm.x=wx-mx*v.k/nz; cm.y=wy-my*v.k/nz; v.apply(true); return;
+    }
+    const nz=Math.min(v.MAX,Math.max(1,s.z*ratio)), r=nz/s.z;
+    v.z=nz; v.px=mx-(g.mx-s.px)*r; v.py=my-(g.my-s.py)*r; v.apply();
+  };
+  v.panBy=(dx,dy)=>{
+    if(v.inf){ const cm=board.cam; cm.x-=dx*v.k/cm.z; cm.y-=dy*v.k/cm.z; v.apply(true); return; }
+    v.px+=dx; v.py+=dy; v.apply();
+  };
+  v.wheel=(e,cx,cy)=>{                                // unlimited: scroll/two-finger-slide moves around, ctrl+scroll or trackpad pinch zooms
+    if(v.inf && !e.ctrlKey && !e.metaKey){ v.panBy(-e.deltaX,-e.deltaY); return; }
+    v.zoomFactorAt(cx,cy,Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)));
+  };
+  /* the part of the page currently on screen, as a camera view (used to start the unlimited canvas where the student was looking) */
+  v.pageRect=()=>{
+    const vw=vp.clientWidth, vh=vp.clientHeight;
+    if(!vw||!vh||v.inf) return {cx:W/2,cy:H/2,vw:W,vh:H};
+    const s=W/v.bw; return { cx:(vw/2-v.px)/v.z*s, cy:(vh/2-v.py)/v.z*s, vw:vw/v.z*s, vh:vh/v.z*s };
+  };
+  v.followRect=c=>{ if(!v.inf) return; board.cam=camContain(c,board.cw,board.ch); v.apply(false); };
+  v.setInf=(on,rect)=>{
+    on=!!on; if(on===v.inf) return;
+    if(on){
+      rect=rect||v.pageRect();
+      v.inf=true; canvas.classList.add('inf'); canvas.style.transform='none';
+      const vw=vp.clientWidth||W, vh=vp.clientHeight||H, k=dpr();
+      v.k=k; board.cw=Math.max(1,Math.round(vw*k)); board.ch=Math.max(1,Math.round(vh*k));
+      canvas.width=board.cw; canvas.height=board.ch; canvas.style.width=vw+'px'; canvas.style.height=vh+'px';
+      board.layers=NULLS(); v.z0=Math.min(board.cw/W,board.ch/H); board.cam=camContain(rect,board.cw,board.ch);
+      board.redrawNow(); v.apply();
+    } else {
+      v.inf=false; canvas.classList.remove('inf'); canvas.style.transform='';
+      board.cam=null; board.cw=W; board.ch=H; canvas.width=W; canvas.height=H; board.layers=NULLS();
+      v.z=1; v.px=0; v.py=0; v.fit(); board.redrawNow();
+    }
+    if(v.onMode) v.onMode(v.inf);
+  };
+  v.reset.page=true;
   return v;
 }
 
@@ -814,7 +1022,12 @@ function createEditor(o){
   const ptrs=new Map();
   let cur=null, curPtr=null, pend=[], pendT=null, lastSet=0, gest=null, pan=null, drag=null, selId=null, locked=false, lastTap=null;
   const items=()=>o.getItems();
-  const pos=e=>{ const r=canvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]; };
+  const pos=e=>{                                     // pointer -> board coordinates (world coordinates in unlimited mode)
+    const r=canvas.getBoundingClientRect(), px=(e.clientX-r.left)/r.width*board.cw, py=(e.clientY-r.top)/r.height*board.ch, cm=board.cam;
+    return cm ? [cm.x+px/cm.z, cm.y+py/cm.z] : [px,py];
+  };
+  const wpp=()=>{ const r=canvas.getBoundingClientRect(), s=board.cw/(r.width||1); return board.cam ? s/board.cam.z : s; };   // board units per screen pixel
+  const hs=()=>view.hs?view.hs():1;
   const P=(e,noSnap)=>{ const p=pos(e); return (E.snap && board.grid && !noSnap && E.tool!=='eraser') ? snapPt(board.grid,p) : p; };   // grid-snapped position
   const vpPt=(x,y)=>{ const r=vp.getBoundingClientRect(); return [x-r.left,y-r.top]; };
   function flush(){ clearTimeout(pendT); pendT=null; if(pend.length && cur) o.send({t:'pts',id:cur.id,pts:pend}); pend=[]; }
@@ -850,7 +1063,7 @@ function createEditor(o){
     if(!it) selId=null;
     board.sel = it ? selFor(it) : null; render(board);
   };
-  const textAt=(x,y)=>{ const tol=18*W/(view.bw*view.z), a=items(); for(let i=a.length-1;i>=0;i--) if(a[i].kind==='text' && hitItem(a[i],x,y,tol)) return a[i]; return null; };
+  const textAt=(x,y)=>{ const tol=18*wpp(), a=items(); for(let i=a.length-1;i>=0;i--) if(a[i].kind==='text' && hitItem(a[i],x,y,tol)) return a[i]; return null; };
   function editText(it){
     askText(text=>{
       it.text=text; rebuild(board,key,items()); o.send({t:'set',item:it});
@@ -859,7 +1072,7 @@ function createEditor(o){
   }
   function beginGesture(){
     const [a,b]=[...ptrs.values()]; const [mx,my]=vpPt((a.x+b.x)/2,(a.y+b.y)/2);
-    gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:view.z,mx,my,px:view.px,py:view.py}; pan=null;
+    gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx,my,sn:view.snap()}; pan=null;
   }
   canvas.addEventListener('pointerdown',e=>{
     e.preventDefault();
@@ -883,13 +1096,13 @@ function createEditor(o){
     }
     if(E.tool==='text') return;                                       // handled on click
     if(E.tool==='move'){                                              // select, drag, rotate, resize, delete
-      const [x,y]=pos(e), tol=18*W/(view.bw*view.z), a=items();
+      const [x,y]=pos(e), tol=18*wpp(), a=items();
       const sel=selId && a.find(i=>i.id===selId && (i.kind==='math'||i.kind==='text'));
-      if(sel && sel.kind==='text' && hitTextHandle(sel,x,y)){
+      if(sel && sel.kind==='text' && hitTextHandle(sel,x,y,hs())){
         const b=textBox(sel); drag={ mode:'tsize', it:sel, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(sel), w0:b.w, h0:b.h }; return;
       }
       if(sel && sel.kind==='math'){
-        const h=hitHandle(sel,x,y);
+        const h=hitHandle(sel,x,y,hs());
         if(h==='del'){ a.splice(a.indexOf(sel),1); selId=null; board.sel=null; rebuild(board,key,a); o.send({t:'undo',id:sel.id}); return; }
         if(h){ drag={ mode:h, it:sel, ptr:e.pointerId, ox:x, oy:y, last:0, orig:snap(sel) }; return; }
       }
@@ -921,10 +1134,9 @@ function createEditor(o){
     if(gest && ptrs.size>=2){
       const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y)||1;
       const [mx,my]=vpPt((a.x+b.x)/2,(a.y+b.y)/2);
-      const nz=Math.min(view.MAX,Math.max(1,gest.z*d/gest.d)), r=nz/gest.z;
-      view.z=nz; view.px=mx-(gest.mx-gest.px)*r; view.py=my-(gest.my-gest.py)*r; view.apply(); return;
+      view.pinch(gest,d/gest.d,mx,my); return;
     }
-    if(pan && pan.id===e.pointerId){ view.px+=dx; view.py+=dy; view.apply(); return; }
+    if(pan && pan.id===e.pointerId){ view.panBy(dx,dy); return; }
     if(drag && e.pointerId===drag.ptr){
       e.preventDefault();
       const [x,y]=pos(e), it=drag.it;
@@ -945,12 +1157,12 @@ function createEditor(o){
     if(cur && e.pointerId===curPtr){
       e.preventDefault();
       if(cur.pts){
-        const L=layerOf(board,key,true);
+        syncLayers(board); const L=layerOf(board,key,true);
         const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
         for(const ev of (evs.length?evs:[e])){
           const pt=P(ev).map(v=>Math.round(v*10)/10), from=cur.pts.length, lp=cur.pts[from-1];
           if(E.snap && board.grid && lp && lp[0]===pt[0] && lp[1]===pt[1]) continue;   // still on the same grid point
-          cur.pts.push(pt); drawPenTail(L.ctx,cur,from); pend.push(pt);
+          cur.pts.push(pt); camDo(board,L.ctx,()=>drawPenTail(L.ctx,cur,from)); pend.push(pt);
         }
         render(board);
         if(!pendT) pendT=setTimeout(flush,30);
@@ -984,7 +1196,7 @@ function createEditor(o){
   },sg);
   vp.addEventListener('wheel',e=>{
     e.preventDefault(); if(locked) return; const r=vp.getBoundingClientRect();
-    view.zoomAt(e.clientX-r.left,e.clientY-r.top,view.z*Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)));
+    view.wheel(e,e.clientX-r.left,e.clientY-r.top);
   },{passive:false,signal:ac.signal});
   return {
     undo(){ const a=items(), it=a.pop(); if(!it) return; rebuild(board,key,a); o.send({t:'undo',id:it.id}); view.refreshSel(); },
@@ -997,7 +1209,7 @@ function createEditor(o){
     addMath(spec,pt){
       const r=vp.getBoundingClientRect();
       let [x,y]=pt ? pos({clientX:pt.x,clientY:pt.y}) : pos({clientX:r.left+r.width/2,clientY:r.top+r.height*0.4});
-      x=Math.min(W-60,Math.max(60,x)); y=Math.min(H-60,Math.max(60,y));
+      if(!board.cam){ x=Math.min(W-60,Math.max(60,x)); y=Math.min(H-60,Math.max(60,y)); }   // on the page: keep it on the page
       const it={ id:rid(10), kind:'math', type:spec.type, val:spec.val, x, y, rot:0, sc:1 };
       items().push(it); E.tool='move'; selId=it.id; board.sel=selOf(it);
       if(view.syncTools) view.syncTools();
@@ -1030,12 +1242,20 @@ function buildToolbar(host,E,view,o){
     snapB.id='btn-snap'; view.gridUI=on=>{ snapB.classList.toggle('hidden',!on); };
     view.snapB=snapB;
   }
+  if(o.infToggle){                                   // student: tick for an unlimited canvas
+    const lb=document.createElement('label'); lb.className='tool sm chk'; lb.title='Tick to draw on a canvas with no edges: drag to move around, pinch to zoom';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.setAttribute('aria-label','Unlimited canvas');
+    cb.onchange=()=>{ if(o.infToggle(cb.checked)===false) cb.checked=!cb.checked; };
+    lb.append(cb,' ∞ Unlimited canvas'); g3.appendChild(lb); view.infCb=cb;
+  }
   btn(g3,'Undo','tool sm',o.undo); btn(g3,o.clearLabel,'tool sm',o.clear);
   const g4=grp('Zoom');
   btn(g4,'−','tool sm',()=>view.zoomBy(1/1.4)).setAttribute('aria-label','Zoom out');
   const zl=document.createElement('span'); zl.className='zl'; zl.textContent='100%'; g4.appendChild(zl);
   btn(g4,'+','tool sm',()=>view.zoomBy(1.4)).setAttribute('aria-label','Zoom in');
-  btn(g4,'Fit','tool sm',()=>view.reset());
+  const fitB=btn(g4,'Fit','tool sm',()=>view.reset());
+  view.onMode=on=>{ fitB.textContent=on?'Fit all':'Fit'; if(view.infCb) view.infCb.checked=on; };
+  if(o.follow){ const fb=btn(g4,'⟲ Follow student','tool sm hidden',o.follow); view.followUI=on=>fb.classList.toggle('hidden',!on); }
   view.onChange=v=>{ zl.textContent=Math.round(v.z*100)+'%'; };
   view.syncTools=()=>refresh();
   function refresh(){
@@ -1253,12 +1473,39 @@ function onStudentConnection(conn){
 function handleStudentData(s, d){
   if(!d || typeof d!=='object' || typeof d.t!=='string') return;
   if(['full','set','pts','undo','clear','front'].includes(d.t)) s.items=applyOps(s.board,'s',s.items,d.t,d);
+  else if(d.t==='mode') setStudentInf(s,d.inf===true);                   // student ticked / unticked "Unlimited canvas"
+  else if(d.t==='cam'){ s.cam=cleanCam(d); updateStudentCam(s); }        // the part of the canvas the student is looking at
   else if(d.t==='sbg'){                                   // student chose (or removed) their own photo
     s.photo = (typeof d.data==='string' && d.data.length<4000000 && /^data:image\/(jpeg|png|webp);base64,/.test(d.data)) ? d.data : null;
     setBg(s.board, s.photo || T.bg);
   }
 }
 
+
+/* ---- unlimited canvas: the teacher's tile follows whatever part the student is looking at ---- */
+function applyTileCam(s){
+  const b=s.board; if(!b || s.tile.classList.contains('max')) return;        // a maximised screen has its own camera
+  const same=(b.cw===W && b.ch===H);
+  if(!s.inf){
+    if(b.cam || !same){ b.cam=null; b.cw=W; b.ch=H; s.canvas.width=W; s.canvas.height=H; b.layers={s:null,t:null,sm:null,tm:null}; b.redrawNow(); }
+    return;
+  }
+  if(!same){ b.cw=W; b.ch=H; s.canvas.width=W; s.canvas.height=H; b.layers={s:null,t:null,sm:null,tm:null}; }
+  b.cam=camContain(s.cam,W,H);
+  same ? b.requestRedraw() : b.redrawNow();
+}
+function updateStudentCam(s){
+  if(!s.inf) return;
+  if(s.tile.classList.contains('max')){ if(s.view && s.follow) s.view.followRect(s.cam); }
+  else applyTileCam(s);
+}
+function setStudentInf(s,on){
+  if(s.inf===on) return;
+  s.inf=on; s.tile.querySelector('.inf-badge').classList.toggle('hidden',!on);
+  const wasMax=s.tile.classList.contains('max');
+  if(wasMax) exitMax(); else applyTileCam(s);
+  if(wasMax) enterMax(s);                                                    // re-open in the matching mode
+}
 
 /* random screen: shuffles a highlight across the tiles, then maximises the winner */
 function randomScreen(){
@@ -1563,7 +1810,7 @@ function fzUI(){ const b=$('btn-mark'); if(b) b.classList.toggle('hidden',!(T.op
 function fzSave(){ try{ localStorage.setItem('classboard_frenzy',JSON.stringify({code:T.code,f:T.frenzy})); }catch(e){} }
 function fzMarkStudent(s){
   const F=T.frenzy; if(!F) return;
-  const old=s.mark, layer=(s.board&&s.board.layers.s)?s.board.layers.s.c:null;
+  const old=s.mark, layer=inkLayerOf(s);
   const cells=fzReadSheet(layer,F.g);
   s.mark={ at:Date.now(), cells:cells.map((row,r)=>row.map((cell,c)=>{
     const v=fzVerdict(cell,F.rows[r]*F.cols[c]), prev=old&&old.cells[r]&&old.cells[r][c];
@@ -1585,7 +1832,7 @@ async function fzMarkAll(open){
 }
 function fzDrawReview(s,cv){
   const ctx=cv.getContext('2d'), g=T.frenzy.g, mk=s.mark;
-  ctx.clearRect(0,0,W,H); ctx.drawImage(s.canvas,0,0);       // exactly what the student sees: sheet + their writing
+  ctx.clearRect(0,0,W,H); ctx.drawImage(pageCanvasOf(s),0,0);       // exactly what the student sees: sheet + their writing
   const fs=Math.round(Math.max(18,g.ch*.2));
   mk.cells.forEach((row,r)=>row.forEach((c,col)=>{
     const v=c.ov||c.v, col_={ok:'#16a34a',bad:'#dc2626','?':'#d97706'}[v]; if(!col_) return;
@@ -1959,12 +2206,13 @@ function createTile(s){
   t.innerHTML=`
     <div class="tile-head">
       <span class="dot"></span><span class="tile-name"></span>
-      <span class="score-badge hidden"></span><span class="lock-badge hidden">🔒 LOCKED</span><span class="rec-badge hidden">● REC</span>
+      <span class="score-badge hidden"></span><span class="lock-badge hidden">🔒 LOCKED</span><span class="inf-badge hidden" title="This student is using the unlimited canvas">∞</span><span class="rec-badge hidden">● REC</span>
       <button class="kebab" aria-label="Screen options" aria-haspopup="true">⋮</button>
     </div>
     <div class="tile-body"><canvas width="${W}" height="${H}"></canvas><div class="offline-badge">Disconnected</div></div>`;
   $('grid').appendChild(t);
   s.tile=t; s.canvas=t.querySelector('canvas'); s.board=makeBoard(s.canvas);
+  s.board.getItems=k=>k==='s'?s.items:s.tItems; s.inf=false; s.follow=true; s.cam={cx:W/2,cy:H/2,vw:W,vh:H};
   if(T.bg) setBg(s.board,T.bg);
   if(T.grid&&T.grid.on) setGrid(s.board,T.grid);
   t.querySelector('.tile-name').textContent=s.name;
@@ -2007,19 +2255,25 @@ function enterMax(s){
   s.tile.classList.add('max');
   const body=s.tile.querySelector('.tile-body');
   const tb=document.createElement('div'); tb.className='toolbar max-tools'; s.tile.insertBefore(tb,body);
-  s.view=makeView(body,s.canvas);
+  s.view=makeView(body,s.canvas,s.board);
   s.editor=createEditor({ canvas:s.canvas, vp:body, board:s.board, key:'t', view:s.view, E:T.E,
     getItems:()=>s.tItems, setItems:a=>{ s.tItems=a; }, send:o=>sendToStudent(s,o) });
-  buildToolbar(tb,T.E,s.view,{ undo:()=>s.editor.undo(), clearLabel:'Remove my drawings', clear:()=>removeTeacherDrawings(s), mathTools:()=>toggleMathTray(s.editor,s.tile) });
+  buildToolbar(tb,T.E,s.view,{ undo:()=>s.editor.undo(), clearLabel:'Remove my drawings', clear:()=>removeTeacherDrawings(s), mathTools:()=>toggleMathTray(s.editor,s.tile),
+    follow: s.inf ? ()=>{ s.follow=true; s.view.followRect(s.cam); s.view.followUI(false); } : null });
   s.ro=new ResizeObserver(()=>s.view.fit()); s.ro.observe(body);
+  if(s.inf){                                          // unlimited canvas: open on the part the student is working on, and keep following until the teacher moves
+    s.follow=true; s.view.setInf(true,s.cam);
+    s.view.onUser=()=>{ if(s.follow){ s.follow=false; s.view.followUI(true); } };
+  }
 }
 function exitMax(){
   closeMathTray();
   document.querySelectorAll('.tile.max').forEach(t=>{
     const s=T.students.get(t.dataset.cid);
-    if(s){ s.ro?.disconnect(); s.editor?.destroy(); s.canvas.style.cssText=''; s.view=s.editor=s.ro=null; }
+    if(s){ s.ro?.disconnect(); s.editor?.destroy(); s.canvas.style.cssText=''; s.canvas.classList.remove('inf'); s.view=s.editor=s.ro=null; }
     t.querySelector('.max-tools')?.remove();
     t.classList.remove('max');
+    if(s) applyTileCam(s);                            // back to the 4:3 gallery tile
   });
 }
 function toggleMax(cid){
@@ -2059,7 +2313,8 @@ function startRecording(s){
   const mime=pickMime();
   const rc=document.createElement('canvas'); rc.width=1280; rc.height=960;
   const rctx=rc.getContext('2d');
-  const paint=()=>rctx.drawImage(s.canvas,0,0,rc.width,rc.height);
+  const paint=()=>{ const sw=s.canvas.width, sh=s.canvas.height, k=Math.min(rc.width/sw,rc.height/sh), w=sw*k, h=sh*k;
+    rctx.fillStyle='#fff'; rctx.fillRect(0,0,rc.width,rc.height); rctx.drawImage(s.canvas,(rc.width-w)/2,(rc.height-h)/2,w,h); };
   paint();
   const timer=setInterval(paint, 33);
   const stream=rc.captureStream(30);
@@ -2118,11 +2373,13 @@ function initStudent(code){
   const S={ locked:false, items:[], tItems:[], kicked:false, joined:false, name:'', peer:null, conn:null, photo:null, teacherBg:null };
   const E={ tool:'pen', color:COLORS[0], size:6, fill:false };
   const send=o=>{ try{ if(S.conn && S.conn.open) S.conn.send(o); }catch(e){} };
-  const view=makeView($('stage'),canvas);
+  const view=makeView($('stage'),canvas,board);
+  board.getItems=k=>k==='s'?S.items:S.tItems;
   const editor=createEditor({ canvas, vp:$('stage'), board, key:'s', view, E,
     getItems:()=>S.items, setItems:a=>{ S.items=a; }, send });
   buildToolbar($('tb'),E,view,{
     snapUI:true,
+    infToggle:on=>setInf(on),
     undo:()=>editor.undo(),
     clearLabel:'Clear',
     clear:()=>{ if(S.locked || !S.items.length) return; if(!confirm('Clear your whiteboard?')) return; if(S.locked) return; editor.clearAll(); },
@@ -2131,6 +2388,29 @@ function initStudent(code){
     removePhoto:()=>{ if(S.locked) return; S.photo=null; setBg(board,S.teacherBg); send({t:'sbg',data:null}); view.photoUI(false); toast('Photo removed'); }
   });
   board.onGrid=on=>{ if(view.gridUI) view.gridUI(on); };   // show the Snap button only while a grid is on
+
+  /* unlimited canvas: the student's choice. Marks keep their coordinates; only the camera changes. The teacher is told which part is on screen. */
+  let camT=0, camLast=0;
+  function sendCam(){
+    clearTimeout(camT); camT=0; const cm=board.cam; if(!view.inf || !cm) return;
+    camLast=performance.now();
+    send({t:'cam',cx:cm.x+board.cw/(2*cm.z),cy:cm.y+board.ch/(2*cm.z),vw:board.cw/cm.z,vh:board.ch/cm.z});
+  }
+  function camSoon(){ if(!view.inf) return; const d=performance.now()-camLast; if(d>=80) sendCam(); else if(!camT) camT=setTimeout(sendCam,80-d); }
+  const tbChange=view.onChange; view.onChange=v=>{ if(tbChange) tbChange(v); camSoon(); };
+  function outsidePage(){
+    return [...S.items,...S.tItems].some(it=>{ if(it.eraser) return false; const b=itemBounds(it); return b.x<-2||b.y<-2||b.x+b.w>W+2||b.y+b.h>H+2; });
+  }
+  function setInf(on){
+    on=!!on; if(S.locked) return false;
+    if(on===view.inf) return true;
+    if(!on && outsidePage() && !confirm('Some of your work is outside the page, so it will be hidden in Page mode (it isn’t deleted: tick Unlimited canvas again to see it). Switch anyway?')) return false;
+    editor.deselect();
+    view.setInf(on);
+    send({t:'mode',inf:on});
+    if(on){ sendCam(); toast('Unlimited canvas on. Drag with two fingers (or use ✋ Pan) to move around, and pinch to zoom.',4500); }
+    return true;
+  }
   $('photo-in').onchange=e=>{
     const f=e.target.files[0]; e.target.value=''; if(!f || S.locked) return;
     fileToData(f,1800,1300000,data=>{
@@ -2167,6 +2447,7 @@ function initStudent(code){
 
   /* screenshot: saves exactly what the student is looking at (current zoom and pan) as a PNG */
   function shotCanvas(){
+    if(view.inf){ const o=document.createElement('canvas'); o.width=board.cw; o.height=board.ch; o.getContext('2d').drawImage(canvas,0,0); return o; }
     const vp=$('stage'), vw=vp.clientWidth, vh=vp.clientHeight, z=view.z, k=W/view.bw;
     const x0=Math.max(0,-view.px/z), y0=Math.max(0,-view.py/z);
     const x1=Math.min(view.bw,(vw-view.px)/z), y1=Math.min(view.bh,(vh-view.py)/z);
@@ -2284,6 +2565,7 @@ function initStudent(code){
         if(!S.joined){ S.joined=true; hide('join'); show('student'); fit(); }
         setStatus(S.name+' · connected',false);
         send({t:'full',items:S.items});
+        send({t:'mode',inf:view.inf}); if(view.inf) sendCam();
         if(S.photo) send({t:'sbg',data:S.photo});
       });
       conn.on('data',d=>{
