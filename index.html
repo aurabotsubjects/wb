@@ -725,7 +725,7 @@ function askText(cb,initial,title){
   const ok=()=>{ const t=ta.value.trim(); close(); if(t) cb(t); };
   m.querySelector('[data-a=c]').onclick=close; m.querySelector('[data-a=ok]').onclick=ok;
   m.onclick=e=>{ if(e.target===m) close(); };
-  ta.addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ok(); } if(e.key==='Escape') close(); });
+  ta.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
 }
 
 /* ---------- maths tools tray (drag onto the board, or tap to add) ---------- */

@@ -54,3 +54,4 @@ Multi-page PDF worksheets, portrait-shaped boards, message all students, save a 
 
 - **Edit:** double-click (or double-tap) any text on the board to change it. With the **Aa Text** tool a single click on existing text edits it.
 - **Resize:** with **↖ Move**, tap text to select it, then drag the blue corner handle to make it bigger or smaller. Drag the text itself to move it.
+- In the text box, **Enter** starts a new line; press the **Add text / Save** button to finish.
