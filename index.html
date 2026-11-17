@@ -233,6 +233,7 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
     <input type="file" id="tab-file" accept="image/*" class="hidden">
     <button class="btn ghost hidden needs-session" id="btn-lock">🔒 Lock all</button>
     <button class="btn ghost hidden needs-session" id="btn-timer">⏱ Timer</button>
+    <button class="btn ghost hidden needs-session" id="btn-frenzy">🔢 5 Minute Frenzy</button>
     <button class="btn ghost hidden needs-session" id="btn-grid">▦ Grid</button>
     <button class="btn ghost hidden needs-session" id="btn-draw">✏️ Draw &amp; send</button>
     <button class="btn ghost hidden needs-session" id="btn-bg">Set background</button>
@@ -1064,6 +1065,7 @@ function initTeacher(){
   $('btn-draw').onclick = openDrawSend;
   $('btn-tab').onclick = () => $('tab-file').click();
   $('btn-timer').onclick = timerModal;
+  $('btn-frenzy').onclick = frenzyModal;
   $('btn-lock').onclick = () => lockAll(!anyLocked());
   $('btn-grid').onclick = gridPanel;
   $('t-timer-pause').onclick = toggleTimerPause;
@@ -1093,7 +1095,7 @@ function startRoom(code){
     localStorage.setItem('classboard_room', code);
     T.retries = 0;
     $('room-code').textContent = code;
-    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-timer','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-timer','btn-frenzy','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
     T.open = true;
     renderEmpty();
     renderLobby();
@@ -1352,6 +1354,138 @@ function timerModal(){
   const go=()=>{ const ms=((+mi.value||0)*60+(+se.value||0))*1000; if(ms<1000){ toast('Set a time first'); return; } close(); startTimer(ms); };
   m.querySelector('[data-a=go]').onclick=go; mi.focus(); mi.select();
   m.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+}
+
+/* ---- 5 Minute Frenzy: random multiplication grid sent as every student's background, with a timer ---- */
+const FRENZY_WORDS = {1:'One',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten',15:'Fifteen',20:'Twenty'};
+function frenzyPick(min,max,n){
+  const pool=[]; for(let i=min;i<=max;i++) pool.push(i);
+  const out=[];
+  while(out.length<n){
+    const a=pool.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    out.push(...a);
+  }
+  return out.slice(0,n);
+}
+function frenzyTitle(ms){
+  const mins=ms/60000;
+  if(ms%60000!==0) return 'Multiplying Frenzy';
+  return (FRENZY_WORDS[mins]||String(mins))+' Minute Multiplying Frenzy';
+}
+function drawFrenzy(ctx,F,answers){
+  const SERIF="Georgia,'Times New Roman',serif", INK='#111';
+  const nc=F.cols.length, nr=F.rows.length;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=INK; ctx.fillStyle=INK; ctx.textAlign='center'; ctx.textBaseline='middle';
+  // title bar
+  ctx.lineWidth=2; ctx.strokeRect(40,24,W-80,68);
+  ctx.font='44px '+SERIF; ctx.fillText(F.title,W/2,59);
+  // instructions
+  ctx.font='28px '+SERIF;
+  ctx.fillText('Multiply each row number by each column number.   (Range '+F.min+' to '+F.max+')',W/2,128);
+  // grid geometry (centred in the space between the instructions and the footer)
+  const zoneT=160, zoneB=1118, zoneW=W-80;
+  const cw=Math.min(210,zoneW/(nc+1)), ch=Math.min(135,(zoneB-zoneT)/(nr+1));
+  const gw=cw*(nc+1), gh=ch*(nr+1), gx=(W-gw)/2, gy=zoneT+((zoneB-zoneT)-gh)/2;
+  // shaded header row and column
+  ctx.fillStyle='#e8e8e8'; ctx.fillRect(gx,gy,gw,ch); ctx.fillRect(gx,gy,cw,gh);
+  // lines
+  ctx.strokeStyle=INK; ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let c=1;c<=nc;c++){ ctx.moveTo(gx+c*cw,gy); ctx.lineTo(gx+c*cw,gy+gh); }
+  for(let r=1;r<=nr;r++){ ctx.moveTo(gx,gy+r*ch); ctx.lineTo(gx+gw,gy+r*ch); }
+  ctx.stroke();
+  ctx.lineWidth=4; ctx.strokeRect(gx,gy,gw,gh);
+  // header numbers
+  const fs=Math.round(Math.min(ch*.52,cw*.42,60));
+  ctx.fillStyle=INK; ctx.font='bold '+fs+'px '+SERIF;
+  ctx.fillText('×',gx+cw/2,gy+ch/2);
+  F.cols.forEach((n,i)=>ctx.fillText(String(n),gx+(i+1.5)*cw,gy+ch/2+1));
+  F.rows.forEach((n,i)=>ctx.fillText(String(n),gx+cw/2,gy+(i+1.5)*ch+1));
+  // answer key (teacher only)
+  if(answers){
+    ctx.fillStyle='#c0392b'; ctx.font=Math.round(fs*.9)+'px '+SERIF;
+    F.rows.forEach((r,i)=>F.cols.forEach((c,j)=>ctx.fillText(String(r*c),gx+(j+1.5)*cw,gy+(i+1.5)*ch+1)));
+  }
+  // footer
+  ctx.fillStyle=INK; ctx.lineWidth=2; ctx.font='34px '+SERIF; ctx.textBaseline='alphabetic';
+  ctx.textAlign='left'; ctx.fillText('Time:',gx+10,1168);
+  ctx.beginPath(); ctx.moveTo(gx+105,1170); ctx.lineTo(gx+300,1170); ctx.stroke();
+  const tot='/ '+(nr*nc); ctx.textAlign='right'; ctx.fillText(tot,gx+gw-10,1168);
+  const ux2=gx+gw-10-ctx.measureText(tot).width-14, ux1=ux2-150;
+  ctx.beginPath(); ctx.moveTo(ux1,1170); ctx.lineTo(ux2,1170); ctx.stroke();
+  ctx.fillText('Score:',ux1-12,1168);
+  ctx.textBaseline='middle'; ctx.textAlign='center';
+}
+function frenzyModal(){
+  if(document.querySelector('.modal')) return;
+  const cfg=T.frenzyCfg||{min:2,max:12,cols:10,rows:10,mins:5,secs:0,timer:true};
+  const m=document.createElement('div'); m.className='modal';
+  const lab='display:block;color:var(--chalk-dim);font-size:.85rem;margin:0 0 4px';
+  m.innerHTML=`<div class="modal-card" style="width:min(720px,100%);max-height:94vh;overflow:auto"><h3>🔢 5 Minute Frenzy</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+      <label style="${lab}">Lowest number<input class="text" id="fz-min" type="number" min="0" max="100" inputmode="numeric"></label>
+      <label style="${lab}">Highest number<input class="text" id="fz-max" type="number" min="0" max="100" inputmode="numeric"></label>
+      <label style="${lab}">Columns (across)<input class="text" id="fz-cols" type="number" min="2" max="12" inputmode="numeric"></label>
+      <label style="${lab}">Rows (down)<input class="text" id="fz-rows" type="number" min="2" max="12" inputmode="numeric"></label>
+    </div>
+    <div class="row" style="justify-content:flex-start;align-items:flex-end;flex-wrap:wrap;margin:14px 0 0;gap:12px">
+      <label style="${lab};margin:0">Time (minutes)<input class="text" id="fz-tm" type="number" min="0" max="180" style="width:110px" inputmode="numeric"></label>
+      <label style="${lab};margin:0">Seconds<input class="text" id="fz-ts" type="number" min="0" max="59" style="width:110px" inputmode="numeric"></label>
+      <label style="display:flex;align-items:center;gap:8px;padding-bottom:14px"><input type="checkbox" id="fz-auto"> Start timer when sent</label>
+    </div>
+    <p id="fz-note" style="color:var(--marigold);margin:10px 0 0;min-height:1.2em"></p>
+    <canvas id="fz-prev" width="${W}" height="${H}" style="display:block;width:100%;max-height:38vh;object-fit:contain;background:#fff;border-radius:10px;margin-top:6px" aria-label="Preview of the worksheet"></canvas>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="fz-ans"> Show answers in this preview (students never see them)</label>
+    <div class="row" style="flex-wrap:wrap"><button class="btn ghost" data-a="cancel">Cancel</button>
+      <button class="btn ghost" data-a="shuffle">🔀 New numbers</button>
+      <button class="btn ghost" data-a="key">Save answer key</button>
+      <button class="btn" data-a="send">Send to students</button></div></div>`;
+  document.body.appendChild(m);
+  const $q=id=>m.querySelector('#'+id), prev=$q('fz-prev'), pctx=prev.getContext('2d');
+  $q('fz-min').value=cfg.min; $q('fz-max').value=cfg.max; $q('fz-cols').value=cfg.cols; $q('fz-rows').value=cfg.rows;
+  $q('fz-tm').value=cfg.mins; $q('fz-ts').value=cfg.secs; $q('fz-auto').checked=cfg.timer;
+  const num=(id,lo,hi,dflt)=>{ let v=parseInt($q(id).value,10); if(isNaN(v)) v=dflt; return Math.max(lo,Math.min(hi,v)); };
+  const read=()=>{
+    let lo=num('fz-min',0,100,2), hi=num('fz-max',0,100,12); if(lo>hi) [lo,hi]=[hi,lo];
+    return { min:lo, max:hi, cols:num('fz-cols',2,12,10), rows:num('fz-rows',2,12,10), mins:num('fz-tm',0,180,5), secs:num('fz-ts',0,59,0), timer:$q('fz-auto').checked };
+  };
+  let F=null;
+  const ms=()=>{ const c=read(); return (c.mins*60+c.secs)*1000; };
+  const redraw=()=>{ if(!F) return; F.title=frenzyTitle(ms()||300000); drawFrenzy(pctx,F,$q('fz-ans').checked); };
+  const regen=()=>{
+    const c=read(), span=c.max-c.min+1;
+    F={ min:c.min, max:c.max, cols:frenzyPick(c.min,c.max,c.cols), rows:frenzyPick(c.min,c.max,c.rows) };
+    const need=Math.max(c.cols,c.rows);
+    $q('fz-note').textContent = span<need ? 'Only '+span+' different numbers are in that range, so some will repeat.' : '';
+    redraw();
+  };
+  ['fz-min','fz-max','fz-cols','fz-rows'].forEach(id=>$q(id).addEventListener('input',regen));
+  ['fz-tm','fz-ts'].forEach(id=>$q(id).addEventListener('input',redraw));
+  $q('fz-ans').onchange=redraw;
+  regen();
+  const close=()=>m.remove();
+  const exportCanvas=ans=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; drawFrenzy(c.getContext('2d'),F,ans); return c; };
+  m.querySelector('[data-a=cancel]').onclick=close;
+  m.onclick=e=>{ if(e.target===m) close(); };
+  m.querySelector('[data-a=shuffle]').onclick=regen;
+  m.querySelector('[data-a=key]').onclick=()=>{
+    exportCanvas(true).toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='frenzy-answer-key.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); },'image/png');
+  };
+  m.querySelector('[data-a=send]').onclick=()=>{
+    const c=read(), time=(c.mins*60+c.secs)*1000;
+    if(c.timer && time<1000){ toast('Set a time, or untick “Start timer when sent”'); return; }
+    T.frenzyCfg=c;
+    F.title=frenzyTitle(time||300000);
+    const cv=exportCanvas(false);
+    let data=cv.toDataURL('image/png');
+    if(data.length>900000){ let q=.92; data=cv.toDataURL('image/jpeg',q); while(data.length>900000 && q>.5){ q-=.08; data=cv.toDataURL('image/jpeg',q); } }
+    close();
+    applyBg(data,true);                       // new sheet for everyone; clears old drawings
+    if(c.timer) startTimer(time);
+    toast('🔢 Frenzy sent'+(c.timer?' – timer started':''),3500);
+  };
 }
 
 /* ---- grid overlay for student maths books ---- */
