@@ -195,47 +195,6 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
 .msg .x{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:0;background:var(--ink);color:#fff;font-size:1.4rem;line-height:1}
 #removed{position:fixed;inset:0;z-index:90;background:var(--board);color:var(--chalk);display:flex;align-items:center;justify-content:center;text-align:center;padding:30px}
 #removed h2{font-size:2rem;margin:0 0 8px}
-.score-badge{background:var(--marigold);color:var(--marigold-ink);border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:800;white-space:nowrap}
-.score-badge.unsure{background:#fde68a}
-.fz-state{color:var(--chalk-dim);font-size:.95rem}
-/* ---- typed 5 Minute Frenzy (student) ---- */
-#student.fzmode .toolbar,#student.fzmode #tb-float{display:none!important}
-#fz{position:absolute;inset:0;z-index:4;background:#f4f1e8;color:#111;display:flex;flex-direction:column;font-family:Georgia,'Times New Roman',serif;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
-#fz-top{flex:none;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap;padding:8px 190px 8px 16px;border-bottom:2px solid #111;background:#fff}
-#fz-title{font-size:clamp(1.1rem,2.8vw,1.9rem);flex:1 1 auto;min-width:0}
-#fz-prog{font:700 1rem var(--font);color:#334}
-#fz-stat{font:600 .8rem var(--font);color:#4b5;display:none}
-#fz-stat.bad{color:#c0392b}
-#fz-body{flex:1;min-height:0;display:flex;gap:14px;padding:10px 12px 12px}
-#fz-gridwrap{flex:1;min-width:0;min-height:0;position:relative}
-#fz-grid{display:grid;position:absolute;inset:0;border:3px solid #111;background:#fff;font-family:Georgia,'Times New Roman',serif}
-.fzc{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:hidden;border:1px solid #444;font-variant-numeric:tabular-nums;cursor:pointer;line-height:1;position:relative}
-.fzc.h{background:#e8e8e8;font-weight:700;cursor:default}
-.fzc.has{background:#eef4ff;color:#14378a}
-.fzc.on{background:#fff3cf;outline:4px solid var(--marigold);outline-offset:-4px;z-index:1}
-.fzc.on.fz-blank::after{content:'';width:2px;height:1.05em;background:#111;animation:fzblink 1s steps(1) infinite}
-@keyframes fzblink{50%{opacity:0}}
-#fz-pad{flex:none;width:min(300px,32%);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);grid-template-areas:"k7 k8 k9" "k4 k5 k6" "k1 k2 k3" "kb k0 ke";gap:10px}
-.fzk{border:0;border-radius:14px;background:var(--board);color:var(--chalk);font:700 clamp(1.6rem,5vh,2.8rem) var(--font);min-height:56px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 0 rgba(0,0,0,.35)}
-.fzk:active{background:var(--board-3);transform:translateY(2px);box-shadow:none}
-.fzk.enter{background:var(--marigold);color:var(--marigold-ink)}
-#fz.locked #fz-pad{opacity:.3;pointer-events:none}
-#fz.locked #fz-prog{color:#b91c1c;font-size:1.15rem}
-@media (orientation:portrait){
-  #fz-body{flex-direction:column}
-  #fz-pad{width:auto;height:clamp(130px,22vh,210px);grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr);grid-template-areas:"k1 k2 k3 k4 k5 k6" "k7 k8 k9 k0 kb ke"}
-  #fz-top{padding-right:150px}
-}
-.fz-card{width:min(1200px,100%)!important;max-height:94vh;display:flex;flex-direction:column;padding:18px!important}
-.fz-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.fz-head h3{margin:0}.fz-head .btn{padding:8px 14px;font-size:.92rem}
-.fz-body{display:flex;gap:16px;min-height:0;flex:1;overflow:auto}
-.fz-list{width:220px;flex:none;display:flex;flex-direction:column;gap:6px;overflow:auto}
-.fz-item{display:flex;justify-content:space-between;gap:8px;text-align:left;background:var(--board);color:var(--chalk);border:2px solid var(--board-3);border-radius:10px;padding:9px 12px;font:inherit;font-weight:600;cursor:pointer}
-.fz-item.on{border-color:var(--marigold)}.fz-item.unsure .sc{color:#fbbf24}.fz-item .sc{font-variant-numeric:tabular-nums;white-space:nowrap}
-.fz-main{flex:1;min-width:0}.fz-sum{margin:0 0 8px;font-size:1.05rem}
-.fz-main canvas{display:block;width:100%;background:#fff;border-radius:10px;cursor:pointer}
-.fz-hint{color:var(--chalk-dim);margin:8px 0 0;font-size:.9rem}
-@media(max-width:820px){.fz-body{flex-direction:column}.fz-list{width:auto;flex-direction:row;overflow:auto}.fz-item{flex:none}}
 /* ---------- unlimited canvas ---------- */
 #sc.inf,.tile.max .tile-body canvas.inf{box-shadow:none}
 .tool.chk{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
@@ -280,8 +239,6 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
     <button class="btn ghost hidden needs-session" id="btn-lock">🔒 Lock all</button>
     <button class="btn ghost hidden needs-session" id="btn-clearall">🧹 Clear all screens</button>
     <button class="btn ghost hidden needs-session" id="btn-timer">⏱ Timer</button>
-    <button class="btn ghost hidden needs-session" id="btn-frenzy">🔢 5 Minute Frenzy</button>
-    <button class="btn hidden needs-session" id="btn-mark">✅ Frenzy results</button>
     <button class="btn ghost hidden needs-session" id="btn-grid">▦ Grid</button>
     <button class="btn ghost hidden needs-session" id="btn-draw">✏️ Draw &amp; send</button>
     <button class="btn ghost hidden needs-session" id="btn-bg">Set background</button>
@@ -331,18 +288,6 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
     <div class="status" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
   </div>
   <div id="stage"><canvas id="sc"></canvas>
-    <div id="fz" class="hidden" aria-label="5 Minute Frenzy">
-      <div id="fz-top"><div id="fz-title"></div><div id="fz-prog"></div><div id="fz-stat"></div></div>
-      <div id="fz-body">
-        <div id="fz-gridwrap"><div id="fz-grid" role="grid"></div></div>
-        <div id="fz-pad" aria-label="Number keypad">
-          <button class="fzk" data-k="7" style="grid-area:k7">7</button><button class="fzk" data-k="8" style="grid-area:k8">8</button><button class="fzk" data-k="9" style="grid-area:k9">9</button>
-          <button class="fzk" data-k="4" style="grid-area:k4">4</button><button class="fzk" data-k="5" style="grid-area:k5">5</button><button class="fzk" data-k="6" style="grid-area:k6">6</button>
-          <button class="fzk" data-k="1" style="grid-area:k1">1</button><button class="fzk" data-k="2" style="grid-area:k2">2</button><button class="fzk" data-k="3" style="grid-area:k3">3</button>
-          <button class="fzk back" data-k="b" style="grid-area:kb" aria-label="Delete">⌫</button><button class="fzk" data-k="0" style="grid-area:k0">0</button><button class="fzk enter" data-k="e" style="grid-area:ke" aria-label="Enter, next box">↵</button>
-        </div>
-      </div>
-    </div>
     <div id="timer-pill" class="hidden"></div></div>
   <div id="tb-float" class="tb-float hidden"><button class="tool" id="fl-show" aria-label="Show toolbar">▼ Tools<span class="dot"></span></button><button class="tool" id="fl-shot" aria-label="Screenshot">📸</button><button class="tool hidden" id="fl-fs" aria-label="Full screen">⛶</button></div>
   <div id="msgs"></div>
@@ -1322,7 +1267,7 @@ function joinByCode(){
 /* =====================================================================
    TEACHER
    ===================================================================== */
-const T = { peer:null, code:null, open:false, started:false, lockAll:false, lockedCids:new Set(), students:new Map(), menuFor:null, retries:0, bg:null, grid:null, frenzy:null, fzA:{}, timer:{state:'off',total:0,remaining:0,endPerf:0}, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
+const T = { peer:null, code:null, open:false, started:false, lockAll:false, lockedCids:new Set(), students:new Map(), menuFor:null, retries:0, bg:null, grid:null, timer:{state:'off',total:0,remaining:0,endPerf:0}, E:{tool:'pen',color:'#ef4444',size:5,fill:false} };
 
 function initTeacher(){
   $('tile-size').oninput = e => $('grid').style.setProperty('--tile', e.target.value+'px');
@@ -1333,8 +1278,6 @@ function initTeacher(){
   $('btn-draw').onclick = openDrawSend;
   $('btn-tab').onclick = () => $('tab-file').click();
   $('btn-timer').onclick = timerModal;
-  $('btn-frenzy').onclick = frenzyModal;
-  $('btn-mark').onclick = () => fzReview();
   $('btn-lock').onclick = () => lockAll(!anyLocked());
   $('btn-grid').onclick = gridPanel;
   $('t-timer-pause').onclick = toggleTimerPause;
@@ -1344,7 +1287,7 @@ function initTeacher(){
   $('btn-bg').onclick = () => $('bg-file').click();
   $('bg-file').onchange = e => { loadImageFile(e.target.files[0]); e.target.value=''; };
   $('btn-bg-off').onclick = () => applyBg(null,false);
-  $('btn-clearall').onclick = () => { if(confirm('Clear all screens? Every student’s drawings, your drawings on their screens, their photos and the background are removed, leaving a blank canvas. A running Frenzy is ended.')) applyBg(null,true,true); };
+  $('btn-clearall').onclick = () => { if(confirm('Clear all screens? Every student’s drawings, your drawings on their screens, their photos and the background are removed, leaving a blank canvas.')) applyBg(null,true,true); };
   document.addEventListener('paste', e => {
     const f=[...(e.clipboardData?.files||[])].find(x=>x.type.startsWith('image/'));
     if(f && !document.querySelector('.modal')){ e.preventDefault(); loadImageFile(f); }
@@ -1365,10 +1308,8 @@ function startRoom(code){
     localStorage.setItem('classboard_room', code);
     T.retries = 0;
     $('room-code').textContent = code;
-    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-clearall','btn-timer','btn-frenzy','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-clearall','btn-timer','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
     T.open = true;
-    try{ const j=JSON.parse(localStorage.getItem('classboard_frenzy')||'null'); if(j&&j.code===code&&j.f&&j.f.id&&j.f.rows){ T.frenzy=j.f; T.fzA=j.a||{}; } }catch(e){}
-    fzUI();
     renderEmpty();
     renderLobby();
     applyMode();
@@ -1493,7 +1434,6 @@ function onStudentConnection(conn){
       conn.send({t:'lobby',on:!T.started});
       conn.send({t:'lock',on:!!s.locked});
       if(T.bg) conn.send({t:'bg',data:T.bg});
-      if(T.frenzy){ conn.send(fzMsg()); fzBadge(s); fzPaintTile(s); }
       if(s.tItems.length) conn.send({t:'tfull',items:s.tItems});
       if(T.grid&&T.grid.on) conn.send({t:'grid',cfg:T.grid});
       if(T.timer.state!=='off') bcastTimer(conn);
@@ -1512,10 +1452,9 @@ function handleStudentData(s, d){
   if(['full','set','pts','undo','clear','front'].includes(d.t)) s.items=applyOps(s.board,'s',s.items,d.t,d);
   else if(d.t==='mode') setStudentInf(s,d.inf===true);                   // student ticked / unticked "Unlimited canvas"
   else if(d.t==='cam'){ s.cam=cleanCam(d); updateStudentCam(s); }        // the part of the canvas the student is looking at
-  else if(d.t==='fza' || d.t==='fzall') fzOnAnswer(s,d);                  // Frenzy: a typed answer
   else if(d.t==='sbg'){                                   // student chose (or removed) their own photo
     s.photo = (typeof d.data==='string' && d.data.length<4000000 && /^data:image\/(jpeg|png|webp);base64,/.test(d.data)) ? d.data : null;
-    if(T.frenzy) fzPaintTile(s); else setBg(s.board, s.photo || T.bg);
+    setBg(s.board, s.photo || T.bg);
   }
 }
 
@@ -1625,7 +1564,7 @@ function timerUI(){
 }
 function timerTick(){
   const t=T.timer;
-  if(t.state==='running' && tRem()<=0){ t.state='done'; t.remaining=0; bcastTimer(); beep(); const fz=T.frenzy&&!T.frenzy.locked; toast(fz ? '⏱ Time’s up! Marking the Frenzy…' : '⏱ Time’s up!',4000); if(fz) setTimeout(fzFinish,1500); }
+  if(t.state==='running' && tRem()<=0){ t.state='done'; t.remaining=0; bcastTimer(); beep(); toast('⏱ Time’s up!',4000); }
   timerUI();
 }
 function startTimer(ms){ const t=T.timer; t.state='running'; t.total=ms; t.remaining=ms; t.endPerf=performance.now()+ms; bcastTimer(); timerUI(); }
@@ -1655,288 +1594,6 @@ function timerModal(){
   const go=()=>{ const ms=((+mi.value||0)*60+(+se.value||0))*1000; if(ms<1000){ toast('Set a time first'); return; } close(); startTimer(ms); };
   m.querySelector('[data-a=go]').onclick=go; mi.focus(); mi.select();
   m.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
-}
-
-/* ---- 5 Minute Frenzy: students TYPE their answers on a keypad; marking is exact (no handwriting reading) ---- */
-/* T.frenzy = { id, title, min, max, rows[], cols[], locked }.  T.fzA[cid] = { name, a:[answer strings, row by row] } (kept in localStorage so a teacher refresh never loses results) */
-function fzMsg(){ const F=T.frenzy; return { t:'fz', id:F.id, title:F.title, min:F.min, max:F.max, rows:F.rows, cols:F.cols, locked:!!F.locked }; }
-function fzBroadcast(o){ for(const s of T.students.values()) if(s.conn?.open){ try{ s.conn.send(o); }catch(e){} } }
-function fzExpected(i){ const F=T.frenzy, nc=F.cols.length; return String(F.rows[(i/nc)|0]*F.cols[i%nc]); }
-function fzScore(a){
-  const F=T.frenzy, n=F.rows.length*F.cols.length; let ok=0,bad=0,blank=0;
-  for(let i=0;i<n;i++){ const v=(a&&a[i])||''; if(v==='') blank++; else if(v===fzExpected(i)) ok++; else bad++; }
-  return {ok,bad,blank,total:n};
-}
-function fzClean(v){ v=String(v==null?'':v).replace(/\D/g,'').slice(0,7); return v.replace(/^0+(?=\d)/,''); }   // digits only, no leading zeros
-function fzEntry(s){ const e=T.fzA[s.cid]||(T.fzA[s.cid]={name:s.name,a:[]}); e.name=s.name; return e; }
-function fzSave(){ try{ localStorage.setItem('classboard_frenzy',JSON.stringify({code:T.code,f:T.frenzy,a:T.fzA})); }catch(e){} }
-let _fzSaveT=0; function fzSaveSoon(){ clearTimeout(_fzSaveT); _fzSaveT=setTimeout(fzSave,400); }
-function fzBadge(s){
-  const b=s.tile&&s.tile.querySelector('.score-badge'); if(!b) return;
-  if(!T.frenzy){ b.classList.add('hidden'); return; }
-  const t=fzScore((T.fzA[s.cid]||{}).a);
-  b.textContent=t.ok+'/'+t.total; b.classList.remove('hidden');
-}
-/* the student's typed sheet, drawn as the tile picture (neutral while they work, ticked and crossed once finished) */
-function drawFrenzyAnswers(ctx,F,a,marked){
-  const G=drawFrenzy(ctx,F,false), {cw,ch,gx,gy}=G, nc=F.cols.length;
-  const fs=Math.round(Math.min(ch*.5,cw*.3,56)), small=Math.round(fs*.5);
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  F.rows.forEach((rv,r)=>F.cols.forEach((cv,c)=>{
-    const i=r*nc+c, v=(a&&a[i])||'', exp=String(rv*cv), x=gx+(c+1)*cw, y=gy+(r+1)*ch;
-    const st = v===''?'blank' : v===exp?'ok':'bad';
-    if(marked){
-      ctx.fillStyle = st==='ok'?'rgba(22,163,74,.17)' : st==='bad'?'rgba(220,38,38,.17)' : 'rgba(0,0,0,.05)';
-      ctx.fillRect(x+2,y+2,cw-4,ch-4);
-    }
-    if(v!==''){
-      ctx.font='bold '+fs+'px Georgia,serif';
-      ctx.fillStyle = !marked?'#1d4ed8' : st==='ok'?'#15803d':'#b91c1c';
-      ctx.fillText(v,x+cw/2,y+ch/2+(marked&&st==='bad'?-small*.35:0));
-    }
-    if(marked && st!=='ok'){
-      ctx.font=(st==='bad'?'bold ':'italic ')+small+'px Georgia,serif'; ctx.fillStyle=st==='bad'?'#b91c1c':'#777';
-      ctx.fillText(st==='bad'?'= '+exp:exp,x+cw/2,y+ch/2+(st==='bad'?fs*.58:0));
-    }
-    if(marked && st!=='blank'){
-      const k=Math.min(cw,ch)*.09, cx=x+cw-k*2, cy=y+k*2;
-      ctx.lineWidth=Math.max(3,k*.4); ctx.lineCap='round'; ctx.lineJoin='round';
-      ctx.strokeStyle = st==='ok'?'#16a34a':'#dc2626'; ctx.beginPath();
-      if(st==='ok'){ ctx.moveTo(cx-k,cy); ctx.lineTo(cx-k*.3,cy+k*.75); ctx.lineTo(cx+k,cy-k*.8); }
-      else { ctx.moveTo(cx-k*.8,cy-k*.8); ctx.lineTo(cx+k*.8,cy+k*.8); ctx.moveTo(cx+k*.8,cy-k*.8); ctx.lineTo(cx-k*.8,cy+k*.8); }
-      ctx.stroke();
-    }
-  }));
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-}
-function fzPaintTile(s){
-  const F=T.frenzy; if(!F||!s.board) return;
-  const cv=s.fzCv||(s.fzCv=document.createElement('canvas')); cv.width=W; cv.height=H;
-  drawFrenzyAnswers(cv.getContext('2d'),F,(T.fzA[s.cid]||{}).a,!!F.locked);
-  s.board.token++; s.board.bg=cv; render(s.board);
-}
-/* an answer arrived: update the score now, redraw the tile and any open results screen a moment later */
-function fzTouch(s){
-  fzBadge(s); fzSaveSoon();
-  clearTimeout(s._fzP); s._fzP=setTimeout(()=>{ if(T.frenzy) fzPaintTile(s); fzRvRefresh(); },350);
-}
-function fzOnAnswer(s,d){
-  const F=T.frenzy; if(!F||F.locked||d.id!==F.id) return;
-  const n=F.rows.length*F.cols.length, e=fzEntry(s);
-  if(d.t==='fza'){
-    const r=d.r|0, c=d.c|0; if(r<0||c<0||r>=F.rows.length||c>=F.cols.length) return;
-    e.a[r*F.cols.length+c]=fzClean(d.v);
-  } else if(Array.isArray(d.a)){
-    e.a=Array.from({length:n},(_,i)=>fzClean(d.a[i]));
-  } else return;
-  fzTouch(s);
-}
-function fzClear(){
-  const had=!!T.frenzy;
-  T.frenzy=null; T.fzA={}; try{ localStorage.removeItem('classboard_frenzy'); }catch(e){}
-  document.querySelector('.fz-rv')?.remove();
-  if(had){
-    fzBroadcast({t:'fz',id:null});
-    for(const s of T.students.values()){ s.board.token++; s.board.bg=null; setBg(s.board,s.photo||T.bg); fzBadge(s); }
-  }
-  fzUI();
-}
-function fzUI(){ const b=$('btn-mark'); if(b) b.classList.toggle('hidden',!(T.open&&T.frenzy)); }
-/* stop students answering (their sheets lock), freeze the results */
-function fzLock(){
-  const F=T.frenzy; if(!F||F.locked) return;
-  F.locked=true; fzBroadcast({t:'fzlock',id:F.id}); fzSave();
-  for(const s of T.students.values()){ fzPaintTile(s); fzBadge(s); }
-  fzUI(); fzRvRefresh();
-}
-function fzFinish(){ if(!T.frenzy) return; fzLock(); fzReview(); }
-function fzEntries(){
-  const out=[], seen=new Set();
-  for(const s of T.students.values()){ out.push({cid:s.cid,name:s.name,a:(T.fzA[s.cid]||{}).a||[]}); seen.add(s.cid); }
-  for(const cid in T.fzA) if(!seen.has(cid)) out.push({cid,name:T.fzA[cid].name||'Student',a:T.fzA[cid].a||[]});   // left the room but their answers still count
-  return out.sort((x,y)=>x.name.localeCompare(y.name));
-}
-function fzRvRefresh(){ const m=document.querySelector('.fz-rv'); if(m&&m._refresh) m._refresh(); }
-function fzReview(){
-  if(document.querySelector('.fz-rv')) document.querySelector('.fz-rv').remove();
-  if(!T.frenzy){ toast('Send a 5 Minute Frenzy first'); return; }
-  const m=document.createElement('div'); m.className='modal fz-rv';
-  m.innerHTML=`<div class="modal-card fz-card"><div class="fz-head"><h3>✅ Frenzy results</h3><span class="fz-state"></span><div class="spacer"></div>
-    <button class="btn ghost" data-a="stop">🔒 Stop answering</button><button class="btn ghost" data-a="csv">Download scores (CSV)</button><button class="btn" data-a="x">Close</button></div>
-    <div class="fz-body"><div class="fz-list"></div><div class="fz-main"><div class="fz-sum"></div><canvas width="${W}" height="${H}"></canvas>
-    <p class="fz-hint">Marked automatically and exactly from what each student typed. <span style="color:#16a34a">✓</span> correct · <span style="color:#dc2626">✗</span> wrong (their answer, with the right answer underneath) · grey = not answered.</p></div></div></div>`;
-  document.body.appendChild(m);
-  const list=m.querySelector('.fz-list'), cv=m.querySelector('canvas'), sum=m.querySelector('.fz-sum'), st=m.querySelector('.fz-state'), stop=m.querySelector('[data-a=stop]');
-  let cur=null;
-  const show=()=>{
-    const F=T.frenzy; if(!F){ m.remove(); return; }
-    stop.classList.toggle('hidden',!!F.locked);
-    st.textContent=F.locked?'Finished':'Students are still answering – scores update live';
-    const es=fzEntries(); list.innerHTML='';
-    if(!es.some(e=>e.cid===cur)) cur=es.length?es[0].cid:null;
-    let tot=0;
-    for(const e of es){
-      const t=fzScore(e.a); tot+=t.ok/t.total;
-      const b=document.createElement('button'); b.className='fz-item'+(e.cid===cur?' on':'');
-      b.innerHTML='<span class="n"></span><span class="sc"></span>'; b.querySelector('.n').textContent=e.name; b.querySelector('.sc').textContent=t.ok+'/'+t.total;
-      b.onclick=()=>{ cur=e.cid; show(); }; list.appendChild(b);
-    }
-    const e=es.find(x=>x.cid===cur);
-    sum.innerHTML='';
-    if(!e){ sum.textContent='Nobody has joined yet.'; cv.getContext('2d').clearRect(0,0,W,H); return; }
-    const t=fzScore(e.a), nm=document.createElement('strong'); nm.textContent=e.name; sum.appendChild(nm);
-    sum.appendChild(document.createTextNode('  '+t.ok+' correct · '+t.bad+' wrong · '+t.blank+' blank  (out of '+t.total+')   ·   class average '+Math.round(tot/es.length*100)+'%'));
-    drawFrenzyAnswers(cv.getContext('2d'),F,e.a,true);
-  };
-  m._refresh=show; show();
-  stop.onclick=()=>{ if(confirm('Stop students answering now? Their sheets lock and the scores are final.')) fzLock(); };
-  m.querySelector('[data-a=x]').onclick=()=>m.remove();
-  m.querySelector('[data-a=csv]').onclick=()=>{
-    const q=v=>'"'+String(v).replace(/"/g,'""')+'"', rows=[['Name','Correct','Wrong','Blank','Out of','Percent'].map(q).join(',')];
-    for(const e of fzEntries()){ const t=fzScore(e.a); rows.push([q(e.name),t.ok,t.bad,t.blank,t.total,Math.round(t.ok/t.total*100)+'%'].join(',')); }
-    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\n')],{type:'text/csv'})); a.download='frenzy-scores.csv';
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  };
-  m.onclick=e=>{ if(e.target===m) m.remove(); };
-}
-
-/* ---- 5 Minute Frenzy: random multiplication grid sent as every student's background, with a timer ---- */
-const FRENZY_WORDS = {1:'One',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten',15:'Fifteen',20:'Twenty'};
-function frenzyPick(min,max,n){
-  const pool=[]; for(let i=min;i<=max;i++) pool.push(i);
-  const out=[];
-  while(out.length<n){
-    const a=pool.slice();
-    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    out.push(...a);
-  }
-  return out.slice(0,n);
-}
-function frenzyTitle(ms){
-  const mins=ms/60000;
-  if(ms%60000!==0) return 'Multiplying Frenzy';
-  return (FRENZY_WORDS[mins]||String(mins))+' Minute Multiplying Frenzy';
-}
-function frenzyGeom(nr,nc){
-  const zoneT=160, zoneB=1118, zoneW=W-80;
-  const cw=Math.min(210,zoneW/(nc+1)), ch=Math.min(135,(zoneB-zoneT)/(nr+1));
-  const gw=cw*(nc+1), gh=ch*(nr+1);
-  return {gx:(W-gw)/2, gy:zoneT+((zoneB-zoneT)-gh)/2, cw, ch, gw, gh, nr, nc};
-}
-function drawFrenzy(ctx,F,answers){
-  const SERIF="Georgia,'Times New Roman',serif", INK='#111';
-  const nc=F.cols.length, nr=F.rows.length;
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle=INK; ctx.fillStyle=INK; ctx.textAlign='center'; ctx.textBaseline='middle';
-  // title bar
-  ctx.lineWidth=2; ctx.strokeRect(40,24,W-80,68);
-  ctx.font='44px '+SERIF; ctx.fillText(F.title,W/2,59);
-  // instructions
-  ctx.font='28px '+SERIF;
-  ctx.fillText('Multiply each row number by each column number.   (Range '+F.min+' to '+F.max+')',W/2,128);
-  // grid geometry (centred in the space between the instructions and the footer)
-  const G=frenzyGeom(nr,nc), {cw,ch,gw,gh,gx,gy}=G;
-  // shaded header row and column
-  ctx.fillStyle='#e8e8e8'; ctx.fillRect(gx,gy,gw,ch); ctx.fillRect(gx,gy,cw,gh);
-  // lines
-  ctx.strokeStyle=INK; ctx.lineWidth=2;
-  ctx.beginPath();
-  for(let c=1;c<=nc;c++){ ctx.moveTo(gx+c*cw,gy); ctx.lineTo(gx+c*cw,gy+gh); }
-  for(let r=1;r<=nr;r++){ ctx.moveTo(gx,gy+r*ch); ctx.lineTo(gx+gw,gy+r*ch); }
-  ctx.stroke();
-  ctx.lineWidth=4; ctx.strokeRect(gx,gy,gw,gh);
-  // header numbers
-  const fs=Math.round(Math.min(ch*.52,cw*.42,60));
-  ctx.fillStyle=INK; ctx.font='bold '+fs+'px '+SERIF;
-  ctx.fillText('×',gx+cw/2,gy+ch/2);
-  F.cols.forEach((n,i)=>ctx.fillText(String(n),gx+(i+1.5)*cw,gy+ch/2+1));
-  F.rows.forEach((n,i)=>ctx.fillText(String(n),gx+cw/2,gy+(i+1.5)*ch+1));
-  // answer key (teacher only)
-  if(answers){
-    ctx.fillStyle='#c0392b'; ctx.font=Math.round(fs*.9)+'px '+SERIF;
-    F.rows.forEach((r,i)=>F.cols.forEach((c,j)=>ctx.fillText(String(r*c),gx+(j+1.5)*cw,gy+(i+1.5)*ch+1)));
-  }
-  // footer
-  ctx.fillStyle=INK; ctx.lineWidth=2; ctx.font='34px '+SERIF; ctx.textBaseline='alphabetic';
-  ctx.textAlign='left'; ctx.fillText('Time:',gx+10,1168);
-  ctx.beginPath(); ctx.moveTo(gx+105,1170); ctx.lineTo(gx+300,1170); ctx.stroke();
-  const tot='/ '+(nr*nc); ctx.textAlign='right'; ctx.fillText(tot,gx+gw-10,1168);
-  const ux2=gx+gw-10-ctx.measureText(tot).width-14, ux1=ux2-150;
-  ctx.beginPath(); ctx.moveTo(ux1,1170); ctx.lineTo(ux2,1170); ctx.stroke();
-  ctx.fillText('Score:',ux1-12,1168);
-  ctx.textBaseline='middle'; ctx.textAlign='center';
-  return G;
-}
-function frenzyModal(){
-  if(document.querySelector('.modal')) return;
-  const cfg=T.frenzyCfg||{min:2,max:12,cols:10,rows:10,mins:5,secs:0,timer:true};
-  const m=document.createElement('div'); m.className='modal';
-  const lab='display:block;color:var(--chalk-dim);font-size:.85rem;margin:0 0 4px';
-  m.innerHTML=`<div class="modal-card" style="width:min(720px,100%);max-height:94vh;overflow:auto"><h3>🔢 5 Minute Frenzy</h3>
-    <p style="color:var(--chalk-dim);margin:-6px 0 12px;font-size:.92rem">Students <strong>type</strong> their answers on a number keypad on their own screen, and the sheet is marked automatically and exactly when the time is up.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
-      <label style="${lab}">Lowest number<input class="text" id="fz-min" type="number" min="0" max="100" inputmode="numeric"></label>
-      <label style="${lab}">Highest number<input class="text" id="fz-max" type="number" min="0" max="100" inputmode="numeric"></label>
-      <label style="${lab}">Columns (across)<input class="text" id="fz-cols" type="number" min="2" max="12" inputmode="numeric"></label>
-      <label style="${lab}">Rows (down)<input class="text" id="fz-rows" type="number" min="2" max="12" inputmode="numeric"></label>
-    </div>
-    <div class="row" style="justify-content:flex-start;align-items:flex-end;flex-wrap:wrap;margin:14px 0 0;gap:12px">
-      <label style="${lab};margin:0">Time (minutes)<input class="text" id="fz-tm" type="number" min="0" max="180" style="width:110px" inputmode="numeric"></label>
-      <label style="${lab};margin:0">Seconds<input class="text" id="fz-ts" type="number" min="0" max="59" style="width:110px" inputmode="numeric"></label>
-      <label style="display:flex;align-items:center;gap:8px;padding-bottom:14px"><input type="checkbox" id="fz-auto"> Start timer when sent</label>
-    </div>
-    <p id="fz-note" style="color:var(--marigold);margin:10px 0 0;min-height:1.2em"></p>
-    <canvas id="fz-prev" width="${W}" height="${H}" style="display:block;width:100%;max-height:38vh;object-fit:contain;background:#fff;border-radius:10px;margin-top:6px" aria-label="Preview of the worksheet"></canvas>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="fz-ans"> Show answers in this preview (students never see them)</label>
-    <div class="row" style="flex-wrap:wrap"><button class="btn ghost" data-a="cancel">Cancel</button>
-      <button class="btn ghost" data-a="shuffle">🔀 New numbers</button>
-      <button class="btn ghost" data-a="key">Save answer key</button>
-      <button class="btn" data-a="send">Send to students</button></div></div>`;
-  document.body.appendChild(m);
-  const $q=id=>m.querySelector('#'+id), prev=$q('fz-prev'), pctx=prev.getContext('2d');
-  $q('fz-min').value=cfg.min; $q('fz-max').value=cfg.max; $q('fz-cols').value=cfg.cols; $q('fz-rows').value=cfg.rows;
-  $q('fz-tm').value=cfg.mins; $q('fz-ts').value=cfg.secs; $q('fz-auto').checked=cfg.timer;
-  const num=(id,lo,hi,dflt)=>{ let v=parseInt($q(id).value,10); if(isNaN(v)) v=dflt; return Math.max(lo,Math.min(hi,v)); };
-  const read=()=>{
-    let lo=num('fz-min',0,100,2), hi=num('fz-max',0,100,12); if(lo>hi) [lo,hi]=[hi,lo];
-    return { min:lo, max:hi, cols:num('fz-cols',2,12,10), rows:num('fz-rows',2,12,10), mins:num('fz-tm',0,180,5), secs:num('fz-ts',0,59,0), timer:$q('fz-auto').checked };
-  };
-  let F=null;
-  const ms=()=>{ const c=read(); return (c.mins*60+c.secs)*1000; };
-  const redraw=()=>{ if(!F) return; F.title=frenzyTitle(ms()||300000); drawFrenzy(pctx,F,$q('fz-ans').checked); };
-  const regen=()=>{
-    const c=read(), span=c.max-c.min+1;
-    F={ min:c.min, max:c.max, cols:frenzyPick(c.min,c.max,c.cols), rows:frenzyPick(c.min,c.max,c.rows) };
-    const need=Math.max(c.cols,c.rows);
-    $q('fz-note').textContent = span<need ? 'Only '+span+' different numbers are in that range, so some will repeat.' : '';
-    redraw();
-  };
-  ['fz-min','fz-max','fz-cols','fz-rows'].forEach(id=>$q(id).addEventListener('input',regen));
-  ['fz-tm','fz-ts'].forEach(id=>$q(id).addEventListener('input',redraw));
-  $q('fz-ans').onchange=redraw;
-  regen();
-  const close=()=>m.remove();
-  const exportCanvas=ans=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; drawFrenzy(c.getContext('2d'),F,ans); return c; };
-  m.querySelector('[data-a=cancel]').onclick=close;
-  m.onclick=e=>{ if(e.target===m) close(); };
-  m.querySelector('[data-a=shuffle]').onclick=regen;
-  m.querySelector('[data-a=key]').onclick=()=>{
-    exportCanvas(true).toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='frenzy-answer-key.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); },'image/png');
-  };
-  m.querySelector('[data-a=send]').onclick=()=>{
-    const c=read(), time=(c.mins*60+c.secs)*1000;
-    if(c.timer && time<1000){ toast('Set a time, or untick “Start timer when sent”'); return; }
-    T.frenzyCfg=c;
-    F.title=frenzyTitle(time||300000);
-    close();
-    fzClear();                                  // forget any earlier Frenzy (and tell students it has ended)
-    T.frenzy={ id:rid(8), title:F.title, min:F.min, max:F.max, rows:F.rows.slice(), cols:F.cols.slice(), locked:false };
-    T.fzA={}; fzSave(); fzUI();
-    fzBroadcast(fzMsg());                       // every student gets the typed sheet + keypad
-    for(const s of T.students.values()){ fzBadge(s); fzPaintTile(s); }
-    if(c.timer) startTimer(time); else if(T.timer.state==='done') stopTimer();
-    toast('🔢 Frenzy sent – students type their answers'+(c.timer?'. Timer started':''),3500);
-  };
 }
 
 /* ---- grid overlay for student maths books ---- */
@@ -2015,7 +1672,6 @@ function bgModal(data,onDone){
   m.onclick=e=>{ if(e.target===m) close(); };
 }
 function applyBg(data, clear, reset){
-  fzClear();
   T.bg=data; $('btn-bg-off').classList.toggle('hidden',!data);
   $('btn-bg').textContent = data ? 'Change background' : 'Set background';
   for(const s of T.students.values()){
@@ -2102,7 +1758,7 @@ function createTile(s){
   t.innerHTML=`
     <div class="tile-head">
       <span class="dot"></span><span class="tile-name"></span>
-      <span class="score-badge hidden"></span><span class="lock-badge hidden">🔒 LOCKED</span><span class="inf-badge hidden" title="This student is using the unlimited canvas">∞</span><span class="rec-badge hidden">● REC</span>
+      <span class="lock-badge hidden">🔒 LOCKED</span><span class="inf-badge hidden" title="This student is using the unlimited canvas">∞</span><span class="rec-badge hidden">● REC</span>
       <button class="kebab" aria-label="Screen options" aria-haspopup="true">⋮</button>
     </div>
     <div class="tile-body"><canvas width="${W}" height="${H}"></canvas><div class="offline-badge">Disconnected</div></div>`;
@@ -2400,122 +2056,12 @@ function initStudent(code){
   const tmRem=()=>TM.state==='running' ? Math.max(0,TM.endPerf-performance.now()) : TM.remaining;
   function tmRender(){
     if(TM.state==='off'){ pill.className='hidden'; return; }
-    if(TM.state==='running' && tmRem()<=0){ TM.state='done'; beep(); fzTimeUp(); }
+    if(TM.state==='running' && tmRem()<=0){ TM.state='done'; beep(); }
     const rem=tmRem();
     pill.className = TM.state==='done' ? 'done' : TM.state==='paused' ? 'paused' : rem<=10000 ? 'low' : '';
     pill.textContent = TM.state==='done' ? 'Time’s up!' : (TM.state==='paused'?'⏸ ':'⏱ ')+fmtTime(rem);
   }
   setInterval(tmRender,250);
-
-  /* 5 Minute Frenzy: the student TYPES answers into the grid with an on-screen number keypad (the teacher marks them exactly) */
-  const FZ={ F:null, A:[], sel:0, fresh:true, locked:false, timeUp:false, cells:[], maxLen:5 };
-  const fzN=()=>FZ.F.rows.length*FZ.F.cols.length;
-  const fzKey=()=>'classboard_fz_'+code+'_'+FZ.F.id;
-  const fzDone=()=>FZ.locked||FZ.timeUp;
-  const fzNums=a=>(Array.isArray(a)?a:[]).map(Number).filter(n=>isFinite(n)&&n>=0&&n<=1000).slice(0,12);
-  const fzClean=v=>String(v==null?'':v).replace(/\D/g,'').slice(0,7).replace(/^0+(?=\d)/,'');
-  function fzStore(){ try{ sessionStorage.setItem(fzKey(),JSON.stringify(FZ.A)); }catch(e){} }
-  function fzLoad(){
-    try{ const a=JSON.parse(sessionStorage.getItem(fzKey())||'null'); if(Array.isArray(a)&&a.length===fzN()) return a.map(fzClean); }catch(e){}
-    return Array(fzN()).fill('');
-  }
-  function fzSendOne(i){ const nc=FZ.F.cols.length; send({t:'fza',id:FZ.F.id,r:(i/nc)|0,c:i%nc,v:FZ.A[i]}); }
-  function fzSendAll(){ if(FZ.F && FZ.A.some(v=>v!=='')) send({t:'fzall',id:FZ.F.id,a:FZ.A}); }
-  function fzPaint(i){
-    const c=FZ.cells[i]; if(!c) return;
-    c.textContent=FZ.A[i];
-    c.classList.toggle('on',i===FZ.sel && !fzDone());
-    c.classList.toggle('has',FZ.A[i]!=='');
-    c.classList.toggle('fz-blank',FZ.A[i]==='');
-  }
-  function fzProgress(){
-    const n=fzN(), got=FZ.A.filter(v=>v!=='').length, r=$('fz');
-    r.classList.toggle('locked',fzDone());
-    $('fz-prog').textContent = fzDone() ? (FZ.timeUp?'':'Finished. ')+'You answered '+got+' of '+n : got+' of '+n+' answered';
-  }
-  function fzSel(i,fresh){
-    const old=FZ.sel; FZ.sel=Math.max(0,Math.min(fzN()-1,i)); FZ.fresh=fresh!==false;
-    fzPaint(old); fzPaint(FZ.sel);
-  }
-  function fzAll(){ for(let i=0;i<fzN();i++) fzPaint(i); fzProgress(); }
-  function fzFit(){
-    if(!FZ.F) return; const g=$('fz-grid'), r=g.getBoundingClientRect(); if(!r.width||!r.height) return;
-    const cw=r.width/(FZ.F.cols.length+1), ch=r.height/(FZ.F.rows.length+1);
-    g.style.fontSize=Math.max(9,Math.min(ch*.56,cw*.92/(FZ.maxLen*.62+.5),64))+'px';
-  }
-  function fzBuild(){
-    const F=FZ.F, nc=F.cols.length, nr=F.rows.length, g=$('fz-grid');
-    FZ.maxLen=String(Math.max(...F.rows)*Math.max(...F.cols)).length;
-    g.innerHTML=''; FZ.cells=[];
-    g.style.gridTemplateColumns='repeat('+(nc+1)+',minmax(0,1fr))'; g.style.gridTemplateRows='repeat('+(nr+1)+',minmax(0,1fr))';
-    const hd=t=>{ const d=document.createElement('div'); d.className='fzc h'; d.textContent=t; g.appendChild(d); };
-    hd('×'); F.cols.forEach(n=>hd(n));
-    F.rows.forEach((rv,r)=>{
-      hd(rv);
-      for(let c=0;c<nc;c++){ const d=document.createElement('div'); d.className='fzc fz-blank'; d.dataset.i=r*nc+c; g.appendChild(d); FZ.cells.push(d); }
-    });
-    $('fz-title').textContent=F.title||'Multiplying Frenzy';
-    fzFit();
-  }
-  /* keypad / keyboard actions */
-  function fzDigit(d){
-    if(fzDone()||S.locked||!FZ.F) return;
-    let cur=FZ.fresh?'':FZ.A[FZ.sel]; FZ.fresh=false;
-    if(cur==='0') cur='';                               // no leading zeros
-    if(cur.length>=FZ.maxLen) return;
-    FZ.A[FZ.sel]=cur+d; fzPaint(FZ.sel); fzProgress(); fzStore(); fzSendOne(FZ.sel);
-  }
-  function fzBack(){
-    if(fzDone()||S.locked||!FZ.F) return;
-    FZ.A[FZ.sel]=FZ.fresh?'':FZ.A[FZ.sel].slice(0,-1); FZ.fresh=false;
-    fzPaint(FZ.sel); fzProgress(); fzStore(); fzSendOne(FZ.sel);
-  }
-  function fzEnter(){
-    if(fzDone()||S.locked||!FZ.F) return;
-    const n=fzN(); let next=FZ.sel+1;
-    if(next>=n){ const e=FZ.A.indexOf(''); next = e>=0 ? e : FZ.sel; }   // end of the sheet: back to the first one still empty
-    fzSel(next,true);
-  }
-  function fzMove(dr,dc){
-    if(fzDone()||S.locked||!FZ.F) return; const nc=FZ.F.cols.length, r=((FZ.sel/nc)|0)+dr, c=(FZ.sel%nc)+dc;
-    if(r<0||c<0||r>=FZ.F.rows.length||c>=nc) return; fzSel(r*nc+c,true);
-  }
-  function fzShow(on){
-    $('fz').classList.toggle('hidden',!on); $('student').classList.toggle('fzmode',on);
-    if(on){ closeMathTray(); document.querySelectorAll('.modal').forEach(m=>m.remove()); editor.deselect&&editor.deselect(); }
-    requestAnimationFrame(()=>{ view.fit(); fzFit(); });
-  }
-  function fzOnMsg(d){
-    if(!d.id){ FZ.F=null; fzShow(false); return; }
-    const id=String(d.id).slice(0,24);
-    if(!FZ.F || FZ.F.id!==id){
-      const rows=fzNums(d.rows), cols=fzNums(d.cols); if(!rows.length||!cols.length) return;
-      FZ.F={id,title:String(d.title||'').slice(0,80),rows,cols}; FZ.timeUp=false;
-      FZ.A=fzLoad(); FZ.locked=false;
-      const e=FZ.A.indexOf(''); FZ.sel=e>=0?e:0; FZ.fresh=true;
-      fzBuild(); fzShow(true);
-    }
-    FZ.locked=d.locked===true; fzAll(); fzSendAll();
-  }
-  function fzTimeUp(){ if(FZ.F){ FZ.timeUp=true; fzAll(); } }
-  $('fz-grid').addEventListener('pointerdown',e=>{ const c=e.target.closest('.fzc[data-i]'); if(!c) return; e.preventDefault(); if(!fzDone()&&!S.locked) fzSel(+c.dataset.i,true); });
-  $('fz-pad').addEventListener('pointerdown',e=>{
-    const k=e.target.closest('.fzk'); if(!k) return; e.preventDefault();
-    const v=k.dataset.k; if(v==='b') fzBack(); else if(v==='e') fzEnter(); else fzDigit(v);
-  });
-  document.addEventListener('keydown',e=>{
-    if(!FZ.F||S.locked||e.ctrlKey||e.metaKey||e.altKey) return;
-    if(document.querySelector('.modal')) return;
-    const t=e.target; if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-    if(/^[0-9]$/.test(e.key)) fzDigit(e.key);
-    else if(e.key==='Backspace'||e.key==='Delete') fzBack();
-    else if(e.key==='Enter'||e.key==='Tab'){ if(e.shiftKey&&e.key==='Tab') fzSel(Math.max(0,FZ.sel-1),true); else fzEnter(); }
-    else if(e.key==='ArrowRight') fzMove(0,1); else if(e.key==='ArrowLeft') fzMove(0,-1);
-    else if(e.key==='ArrowDown') fzMove(1,0); else if(e.key==='ArrowUp') fzMove(-1,0);
-    else return;
-    e.preventDefault();
-  });
-  new ResizeObserver(fzFit).observe($('fz-grid'));
 
   /* reference images: opened in their own browser tab */
   const refs=[];
@@ -2565,7 +2111,7 @@ function initStudent(code){
   }
 
   /* connection */
-  function setStatus(txt,bad){ $('fz-stat').textContent=txt; $('fz-stat').classList.toggle('bad',!!bad); $('fz-stat').style.display=bad?'block':'none'; $('status-text').textContent=txt; $('status').classList.toggle('bad',!!bad); $('tb-float').classList.toggle('bad',!!bad); }
+  function setStatus(txt,bad){ $('status-text').textContent=txt; $('status').classList.toggle('bad',!!bad); $('tb-float').classList.toggle('bad',!!bad); }
   let attemptTimer=null;
   function connect(){
     if(S.kicked) return;
@@ -2582,7 +2128,6 @@ function initStudent(code){
         send({t:'full',items:S.items});
         send({t:'mode',inf:view.inf}); if(view.inf) sendCam();
         if(S.photo) send({t:'sbg',data:S.photo});
-        fzSendAll();                                   // Frenzy: re-send typed answers after a reconnect
       });
       conn.on('data',d=>{
         if(!d) return;
@@ -2591,13 +2136,11 @@ function initStudent(code){
         else if(d.t==='lock'){ setLocked(d.on===true); }
         else if(d.t==='tab'){ addRef(d.data); }
         else if(d.t==='grid'){ setGrid(board,d.cfg); }
-        else if(d.t==='fz'){ fzOnMsg(d); }
-        else if(d.t==='fzlock'){ if(FZ.F && FZ.F.id===d.id){ FZ.locked=true; fzAll(); } }
         else if(d.t==='timer'){
           if(!['off','running','paused','done'].includes(d.state)) return;
           const prev=TM.state;
           TM.state=d.state; TM.remaining=Math.max(0,+d.remaining||0); TM.endPerf=performance.now()+TM.remaining;
-          if(d.state==='done' && prev!=='done'){ beep(); fzTimeUp(); }
+          if(d.state==='done' && prev!=='done') beep();
           tmRender();
         }
         else if(d.t==='bg'){
