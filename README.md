@@ -69,3 +69,7 @@ Each student has an **∞ Unlimited canvas** tickbox in their toolbar. Unticked 
 - **Worksheets / Frenzy:** a teacher background sits where the page is (with a thin outline). Frenzy marking reads the student's writing in page coordinates, so it works the same for both modes.
 - **Under the hood:** marks are stored in unbounded "world" coordinates; a camera (`board.cam`) decides what is drawn. Students send `{t:'mode'}` and `{t:'cam'}` messages; page-mode students are unchanged.
 
+## 5 Minute Frenzy: live progress
+
+While a Frenzy is running, each student's tile score (e.g. `12/100`) updates a moment after they write. It is re-marked automatically in the background, one student at a time, and the gap between re-marks grows with class size so the teacher's device stays responsive. ✅ Mark Frenzy still does a full fresh mark and opens the review screen.
+

@@ -1299,7 +1299,7 @@ function initTeacher(){
   $('btn-tab').onclick = () => $('tab-file').click();
   $('btn-timer').onclick = timerModal;
   $('btn-frenzy').onclick = frenzyModal;
-  $('btn-mark').onclick = () => { if([...T.students.values()].some(s=>s.mark)) fzReview(); else fzMarkAll(); };
+  $('btn-mark').onclick = () => { const all=[...T.students.values()]; if(all.some(s=>s.mark) && !all.some(s=>s.fzDirty)) fzReview(); else fzMarkAll(); };
   $('btn-lock').onclick = () => lockAll(!anyLocked());
   $('btn-grid').onclick = gridPanel;
   $('t-timer-pause').onclick = toggleTimerPause;
@@ -1475,6 +1475,7 @@ function handleStudentData(s, d){
   if(['full','set','pts','undo','clear','front'].includes(d.t)) s.items=applyOps(s.board,'s',s.items,d.t,d);
   else if(d.t==='mode') setStudentInf(s,d.inf===true);                   // student ticked / unticked "Unlimited canvas"
   else if(d.t==='cam'){ s.cam=cleanCam(d); updateStudentCam(s); }        // the part of the canvas the student is looking at
+  if(T.frenzy && ['full','set','pts','undo','clear','front'].includes(d.t)) fzQueue(s);   // Frenzy running: keep this student's score up to date
   else if(d.t==='sbg'){                                   // student chose (or removed) their own photo
     s.photo = (typeof d.data==='string' && d.data.length<4000000 && /^data:image\/(jpeg|png|webp);base64,/.test(d.data)) ? d.data : null;
     setBg(s.board, s.photo || T.bg);
@@ -1808,8 +1809,30 @@ function fzClear(){
 }
 function fzUI(){ const b=$('btn-mark'); if(b) b.classList.toggle('hidden',!(T.open&&T.frenzy)); }
 function fzSave(){ try{ localStorage.setItem('classboard_frenzy',JSON.stringify({code:T.code,f:T.frenzy})); }catch(e){} }
+/* Live progress: a student's sheet is re-marked shortly after they write, so the score badge on their tile climbs during the Frenzy.
+   One student at a time, and the gap grows with class size so the teacher's device is never kept busy for more than about a third of the time. */
+const fzQ={q:new Set(),busy:false,cost:60};
+function fzQueue(s){
+  if(!T.frenzy) return;
+  s.fzDirty=true; clearTimeout(s._fzT);
+  const gap=Math.max(2500, fzQ.cost*T.students.size*3), wait=Math.max(1200, gap-(Date.now()-(s.fzLast||0)));
+  s._fzT=setTimeout(()=>{ fzQ.q.add(s); fzPump(); },wait);
+}
+async function fzPump(){
+  if(fzQ.busy) return; fzQ.busy=true;
+  while(fzQ.q.size){
+    const s=fzQ.q.values().next().value; fzQ.q.delete(s);
+    if(!T.frenzy || !s.tile || !s.tile.isConnected) continue;
+    const t0=performance.now();
+    try{ fzMarkStudent(s); s.fzDirty=false; s.fzLast=Date.now(); }catch(e){ console.warn('live mark failed',e); }
+    fzQ.cost=fzQ.cost*.7+(performance.now()-t0)*.3;
+    await new Promise(r=>setTimeout(r,30));
+  }
+  fzQ.busy=false;
+}
 function fzMarkStudent(s){
   const F=T.frenzy; if(!F) return;
+  clearTimeout(s._fzT); s.fzDirty=false; s.fzLast=Date.now();
   const old=s.mark, layer=inkLayerOf(s);
   const cells=fzReadSheet(layer,F.g);
   s.mark={ at:Date.now(), cells:cells.map((row,r)=>row.map((cell,c)=>{
@@ -2038,6 +2061,7 @@ function frenzyModal(){
     close();
     applyBg(data,true);                       // new sheet for everyone; clears old drawings
     T.frenzy={ rows:F.rows.slice(), cols:F.cols.slice(), g:frenzyGeom(F.rows.length,F.cols.length) }; fzSave(); fzUI();   // kept so the sheet can be marked
+    for(const s of T.students.values()){ s.mark=null; fzBadge(s); s.fzDirty=false; clearTimeout(s._fzT); }
     if(c.timer) startTimer(time);
     toast('🔢 Frenzy sent'+(c.timer?' – timer started':''),3500);
   };
