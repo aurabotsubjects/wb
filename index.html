@@ -567,8 +567,8 @@ function gridCanvas(g){
     for(const major of [false,true]){
       if(major && !g.major) continue;
       x.beginPath();
-      if(g.type==='square') for(let i=0;i*u<=W;i++){ if((g.major&&i%g.major===0)===major){ x.moveTo(i*u+.5,0); x.lineTo(i*u+.5,H); } }
-      for(let j=0;j*u<=H;j++){ if((g.major&&j%g.major===0)===major){ x.moveTo(0,j*u+.5); x.lineTo(W,j*u+.5); } }
+      if(g.type==='square') for(let i=0;i*u<=W;i++){ if(!!(g.major&&i%g.major===0)===major){ x.moveTo(i*u+.5,0); x.lineTo(i*u+.5,H); } }
+      for(let j=0;j*u<=H;j++){ if(!!(g.major&&j%g.major===0)===major){ x.moveTo(0,j*u+.5); x.lineTo(W,j*u+.5); } }
       x.lineWidth=major?3:1.6; x.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; x.stroke();
     }
   }
@@ -585,8 +585,8 @@ function drawCoordGrid(x,g,o){
   for(const major of [false,true]){
     if(major && !g.major) continue;
     x.beginPath();
-    for(let i=-nxL;i<=nxR;i++){ if(((g.major&&i%g.major===0))===major){ const px=o.x+i*u+.5; x.moveTo(px,top); x.lineTo(px,bottom); } }
-    for(let j=-nyU;j<=nyD;j++){ if(((g.major&&j%g.major===0))===major){ const py=o.y+j*u+.5; x.moveTo(left,py); x.lineTo(right,py); } }
+    for(let i=-nxL;i<=nxR;i++){ if(!!(g.major&&i%g.major===0)===major){ const px=o.x+i*u+.5; x.moveTo(px,top); x.lineTo(px,bottom); } }
+    for(let j=-nyU;j<=nyD;j++){ if(!!(g.major&&j%g.major===0)===major){ const py=o.y+j*u+.5; x.moveTo(left,py); x.lineTo(right,py); } }
     x.lineWidth=major?3:1.6; x.globalAlpha=major?Math.min(1,g.alpha+.3):g.alpha; x.stroke();
   }
   // axes
