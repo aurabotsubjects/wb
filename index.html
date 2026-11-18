@@ -278,6 +278,7 @@ input[type=color]{width:40px;height:40px;border:0;padding:0;background:none;bord
     <button class="btn ghost hidden needs-session" id="btn-tab">🖼️ Send image as tab</button>
     <input type="file" id="tab-file" accept="image/*" class="hidden">
     <button class="btn ghost hidden needs-session" id="btn-lock">🔒 Lock all</button>
+    <button class="btn ghost hidden needs-session" id="btn-clearall">🧹 Clear all screens</button>
     <button class="btn ghost hidden needs-session" id="btn-timer">⏱ Timer</button>
     <button class="btn ghost hidden needs-session" id="btn-frenzy">🔢 5 Minute Frenzy</button>
     <button class="btn hidden needs-session" id="btn-mark">✅ Frenzy results</button>
@@ -1343,6 +1344,7 @@ function initTeacher(){
   $('btn-bg').onclick = () => $('bg-file').click();
   $('bg-file').onchange = e => { loadImageFile(e.target.files[0]); e.target.value=''; };
   $('btn-bg-off').onclick = () => applyBg(null,false);
+  $('btn-clearall').onclick = () => { if(confirm('Clear all screens? Every student’s drawings, your drawings on their screens, their photos and the background are removed, leaving a blank canvas. A running Frenzy is ended.')) applyBg(null,true,true); };
   document.addEventListener('paste', e => {
     const f=[...(e.clipboardData?.files||[])].find(x=>x.type.startsWith('image/'));
     if(f && !document.querySelector('.modal')){ e.preventDefault(); loadImageFile(f); }
@@ -1363,7 +1365,7 @@ function startRoom(code){
     localStorage.setItem('classboard_room', code);
     T.retries = 0;
     $('room-code').textContent = code;
-    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-timer','btn-frenzy','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
+    ['room-chip','btn-qr','btn-random','btn-tab','btn-lock','btn-clearall','btn-timer','btn-frenzy','btn-grid','btn-draw','btn-bg','count-chip','size-ctl','btn-end'].forEach(show);
     T.open = true;
     try{ const j=JSON.parse(localStorage.getItem('classboard_frenzy')||'null'); if(j&&j.code===code&&j.f&&j.f.id&&j.f.rows){ T.frenzy=j.f; T.fzA=j.a||{}; } }catch(e){}
     fzUI();
@@ -2012,17 +2014,17 @@ function bgModal(data,onDone){
   m.querySelector('[data-a=clear]').onclick=()=>{ close(); applyBg(data,true); if(onDone) onDone(); };
   m.onclick=e=>{ if(e.target===m) close(); };
 }
-function applyBg(data, clear){
+function applyBg(data, clear, reset){
   fzClear();
   T.bg=data; $('btn-bg-off').classList.toggle('hidden',!data);
   $('btn-bg').textContent = data ? 'Change background' : 'Set background';
   for(const s of T.students.values()){
-    if(data) s.photo=null;
+    if(data||reset) s.photo=null;
     setBg(s.board,s.photo||data);
     if(clear){ s.items=[]; s.tItems=[]; rebuild(s.board,'s',s.items); rebuild(s.board,'t',s.tItems); }
-    if(s.conn?.open){ try{ s.conn.send({t:'bg',data,clear:!!clear,fresh:!!data}); }catch(e){} }
+    if(s.conn?.open){ try{ s.conn.send({t:'bg',data,clear:!!clear,fresh:!!data,reset:!!reset}); }catch(e){} }
   }
-  toast(data ? 'Background sent to students' : 'Background removed');
+  toast(reset ? '🧹 All screens cleared' : data ? 'Background sent to students' : 'Background removed');
 }
 
 /* ---- send image as a browser tab (reference only, not drawable) ---- */
@@ -2600,7 +2602,7 @@ function initStudent(code){
         }
         else if(d.t==='bg'){
           S.teacherBg=d.data||null;
-          if(d.fresh && d.data){ S.photo=null; view.photoUI(false); }   // a new teacher background replaces a student's photo
+          if((d.fresh && d.data) || d.reset){ S.photo=null; view.photoUI(false); }   // a new teacher background replaces a student's photo
           if(!S.photo) setBg(board,S.teacherBg);
           if(d.clear){ S.items=[]; S.tItems=[]; rebuild(board,'s',S.items); rebuild(board,'t',S.tItems); send({t:'clear'}); }
         }
